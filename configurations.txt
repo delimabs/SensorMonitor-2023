@@ -1,0 +1,5 @@
+INSTRUMENT, ADDRESS
+control_addrr,COM6
+
+current_cell_1_temp_sensor, 1.264
+current_cell_2_temp_sensor, 1.265
