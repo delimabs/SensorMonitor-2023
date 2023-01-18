@@ -4,11 +4,11 @@
 #include <max6675.h>
 
 // ON-OFF warnings:
-int green_led = 1;
-int yellow_led = 2;
-int red_led = 3
-int relay_1 = 4;
-int relay_2 = 5;
+int green_led = 6;
+int yellow_led = 5;
+int red_led = 4;
+int relay_1 = 3;
+int relay_2 = 2;
 
 Adafruit_BME280 bme; //cria objeto tipo Adafruit_BME280 (I2C)
 
@@ -33,6 +33,7 @@ void setup()
   pinMode(green_led, OUTPUT);
   pinMode(yellow_led, OUTPUT);
   pinMode(red_led, OUTPUT);
+  pinMode(relay_1, OUTPUT);
   delay(50);
 }
 

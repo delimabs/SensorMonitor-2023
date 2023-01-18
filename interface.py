@@ -18,8 +18,8 @@ class Main_Interface(QMainWindow):
         """_summary_
         The init function reads the config file, sets the main boolean controllers,
         and call other functions to draw the graphical objects.
-
         """
+        
         super().__init__()
         self.config = pd.read_csv('configurations.txt', sep=',')
         print(self.config['address'][0])
@@ -35,11 +35,9 @@ class Main_Interface(QMainWindow):
                                 'start_stop_control': False, 
                                 'data_logging': False}
         
-        #NEEDS TO SUBSTITUTE THESE VARIABLES 
-        self.controller_connection = False
+        #NEEDS TO SUBSTITUTE THESE VARIABLES
         self.controller_flow = False
         self.start_stop_control = False
-        self.log_running = False
         
         self.period = 1000
         self.timer = QtCore.QTimer()
@@ -158,6 +156,7 @@ class Main_Interface(QMainWindow):
         procedure to interface with the arduino board, the OVG furnace,
         and the multichannel Keithley multimeter; 
         """
+
         self.connect_lbl = QLabel(self.connect_board_widget)
         self.connect_lbl.setText('Instruments')
         self.connect_lbl.setFont(self.title_font)
@@ -173,15 +172,15 @@ class Main_Interface(QMainWindow):
         self.controller_status_lbl.setAlignment(QtCore.Qt.AlignTop | QtCore.Qt.AlignCenter)
         self.controller_status_lbl.setStyleSheet("background-color: rgb(250, 80, 80);")
         
-        self.OVG4_connect_btn = QPushButton(self.connect_board_widget)
-        self.OVG4_connect_btn.setText('OVG4')
-        # self.OVG4_connect_btn.clicked.connect(self.OVG4_connect)
+        self.VOVG_connect_btn = QPushButton(self.connect_board_widget)
+        self.VOVG_connect_btn.setText('OVG4')
+        # self.VOVG_connect_btn.clicked.connect(self.OVG4_connect)
 
-        self.OVG4_status_lbl = QLabel(self.connect_board_widget)
-        self.OVG4_status_lbl.setText('OFF')
-        self.OVG4_status_lbl.setFixedSize(65, 20)
-        self.OVG4_status_lbl.setAlignment(QtCore.Qt.AlignTop | QtCore.Qt.AlignCenter)
-        self.OVG4_status_lbl.setStyleSheet("background-color: rgb(250, 80, 80);")
+        self.VOVG_status_lbl = QLabel(self.connect_board_widget)
+        self.VOVG_status_lbl.setText('OFF')
+        self.VOVG_status_lbl.setFixedSize(65, 20)
+        self.VOVG_status_lbl.setAlignment(QtCore.Qt.AlignTop | QtCore.Qt.AlignCenter)
+        self.VOVG_status_lbl.setStyleSheet("background-color: rgb(250, 80, 80);")
 
         self.start_flow_btn = QPushButton(self.connect_board_widget)
         self.start_flow_btn.setText('Start flow')
@@ -198,8 +197,8 @@ class Main_Interface(QMainWindow):
         self.connection_board_layout.addWidget(self.connect_lbl, 0, 0, 1, 2)
         self.connection_board_layout.addWidget(self.controller_connect_btn, 1, 0, 1, 1)
         self.connection_board_layout.addWidget(self.controller_status_lbl, 1, 1, 1, 1)
-        self.connection_board_layout.addWidget(self.OVG4_connect_btn, 2, 0, 1, 1)
-        self.connection_board_layout.addWidget(self.OVG4_status_lbl, 2, 1, 1, 1)
+        self.connection_board_layout.addWidget(self.VOVG_connect_btn, 2, 0, 1, 1)
+        self.connection_board_layout.addWidget(self.VOVG_status_lbl, 2, 1, 1, 1)
         self.connection_board_layout.addWidget(self.start_flow_btn, 3, 0, 1, 1)
         self.connection_board_layout.addWidget(self.status_flow_lbl, 3, 1, 1, 1)
 
@@ -436,16 +435,15 @@ class Main_Interface(QMainWindow):
 
         self.main_log_layout = QGridLayout(self.log_dlg)
 
-        self.allSelected = False
+        self.all_selected = False
         
         self.log_lbl_1 = QLabel(self.log_dlg)
         self.log_lbl_1.setText('Choose the variables to LOG:')
 
         # first column
-
-        self.temperature_check = QCheckBox('Flow Temperature', self.log_dlg)
-        self.pressure_check = QCheckBox('Flow Pressure', self.log_dlg)
-        self.humidity_check = QCheckBox('Flow Humidity', self.log_dlg)
+        self.flow_temp_check = QCheckBox('Flow Temperature', self.log_dlg)
+        self.flow_press_check = QCheckBox('Flow Pressure', self.log_dlg)
+        self.flow_humid_check = QCheckBox('Flow Humidity', self.log_dlg)
 
         # second column
         self.ch1_check = QCheckBox('ch1 Resistance', self.log_dlg)
@@ -454,44 +452,32 @@ class Main_Interface(QMainWindow):
         self.ch4_check = QCheckBox('ch4 Resistance', self.log_dlg)
         
         # third column
-        self.OVG4_temperature_check = QCheckBox('OVG4 Temperature (C)', self.log_dlg)
+        self.OVG4_temp_check = QCheckBox('OVG4 Temperature (C)', self.log_dlg)
         self.OVG4_sample_flow_check = QCheckBox('OVG4 Sample Flow (sccm)', self.log_dlg)
+        self.thermo_1_check = QCheckBox('Thermocouple 1', self.log_dlg)
+        self.thermo_2_check = QCheckBox('Thermocouple 2', self.log_dlg)
 
         # fourth column
-      
-        self.MQ2_check = QCheckBox('MQ-2', self.log_dlg)
-        self.MQ3_check = QCheckBox('MQ-3', self.log_dlg)
         self.MICS5524_check = QCheckBox('MICS5524', self.log_dlg)
         self.MICS6814_CO_check = QCheckBox('MICS6814-CO', self.log_dlg)
         self.MICS6814_NH3_check = QCheckBox('MICS6814-NH3', self.log_dlg)
         self.MICS6814_NO2_check = QCheckBox('MICS6814-NO2', self.log_dlg)
-        
-        self.MQ2_check.setDisabled(True)
-        self.MQ3_check.setDisabled(True)
-        self.MICS5524_check.setDisabled(True)
+
+        ## TO_DO create a function to control which sensor
+        # is being used.
+        self.MICS5524_check.setDisabled(False)
         self.MICS6814_CO_check.setDisabled(True)
         self.MICS6814_NH3_check.setDisabled(True)
         self.MICS6814_NO2_check.setDisabled(True)
+        self.thermo_2_check.setDisabled(True)
+        self.ch1_check.setDisabled(True)
+        self.ch2_check.setDisabled(True)
+        self.ch3_check.setDisabled(True)
+        self.ch4_check.setDisabled(True)
+        self.OVG4_temp_check.setDisabled(True)
+        self.OVG4_sample_flow_check.setDisabled(True)
 
-        if self.analyte_sensor_control['MQ-2']:
-            self.MQ2_check.setDisabled(False)
-
-        elif self.analyte_sensor_control['MQ-3']:
-            self.MQ3_check.setDisabled(False)
-        
-        elif self.analyte_sensor_control['MICS5524']:
-            self.MICS5524_check.setDisabled(False)
-
-        elif self.analyte_sensor_control['MICS6814-CO']:
-            self.MICS6814_CO_check.setDisabled(False)
-
-        elif self.analyte_sensor_control['MICS6814-NH3']:
-            self.MICS6814_NH3_check.setDisabled(False)
-
-        elif self.analyte_sensor_control['MICS6814-NO2']:
-            self.MICS6814_NO2_check.setDisabled(False)
-
-        # Line 1 under columns
+        # objects line 1 under columns
         self.user_lbl = QLabel(self.log_dlg)
         self.user_lbl.setText('User: ')
         self.user_input = QLineEdit(self.log_dlg)
@@ -506,7 +492,7 @@ class Main_Interface(QMainWindow):
 
         self.select_all_btn = QPushButton(self.btn_log_widget)
         self.select_all_btn.setText('Select all')
-        #  self.select_all_btn.clicked.connect(self.selectAllLogDlg)
+        self.select_all_btn.clicked.connect(self.select_all_log_dlg)
        
         self.start_log_btn = QPushButton(self.btn_log_widget)
         self.start_log_btn.setText('Start')
@@ -523,25 +509,26 @@ class Main_Interface(QMainWindow):
     
         # main layout
         self.main_log_layout.addWidget(self.log_lbl_1, 0, 0, 1, 4)
-        self.main_log_layout.addWidget(self.temperature_check, 1, 0, 1, 1)
-        self.main_log_layout.addWidget(self.pressure_check, 2, 0, 1, 1)
-        self.main_log_layout.addWidget(self.humidity_check, 3, 0, 1, 1)
 
-        self.main_log_layout.addWidget(self.ch1_check, 1, 1, 1, 1)
-        self.main_log_layout.addWidget(self.ch2_check, 2, 1, 1, 1)
-        self.main_log_layout.addWidget(self.ch3_check, 3, 1, 1, 1)                                                       
-        self.main_log_layout.addWidget(self.ch4_check, 4, 1, 1, 1)
-        
-        self.main_log_layout.addWidget(self.OVG4_temperature_check, 1, 2, 1, 1)
-        self.main_log_layout.addWidget(self.MQ2_check, 2, 2, 1, 1)
-        self.main_log_layout.addWidget(self.MQ3_check, 3, 2, 1, 1)
-        self.main_log_layout.addWidget(self.MICS5524_check, 4, 2, 1, 1)
-        
-        self.main_log_layout.addWidget(self.OVG4_sample_flow_check, 1, 3, 1, 1)
-        self.main_log_layout.addWidget(self.MICS6814_CO_check, 2, 3, 1, 1)
-        self.main_log_layout.addWidget(self.MICS6814_NH3_check, 3, 3, 1, 1)
-        self.main_log_layout.addWidget(self.MICS6814_NO2_check, 4, 3, 1, 1)
-        
+        self.main_log_layout.addWidget(self.ch1_check, 1, 0, 1, 1)
+        self.main_log_layout.addWidget(self.ch2_check, 2, 0, 1, 1)
+        self.main_log_layout.addWidget(self.ch3_check, 3, 0, 1, 1)                                                       
+        self.main_log_layout.addWidget(self.ch4_check, 4, 0, 1, 1)
+
+        self.main_log_layout.addWidget(self.MICS5524_check, 1, 1, 1, 1)
+        self.main_log_layout.addWidget(self.MICS6814_CO_check, 2, 1, 1, 1)
+        self.main_log_layout.addWidget(self.MICS6814_NH3_check, 3, 1, 1, 1)
+        self.main_log_layout.addWidget(self.MICS6814_NO2_check, 4, 1, 1, 1)
+
+        self.main_log_layout.addWidget(self.flow_temp_check, 1, 2, 1, 1)
+        self.main_log_layout.addWidget(self.flow_press_check, 2, 2, 1, 1)
+        self.main_log_layout.addWidget(self.flow_humid_check, 3, 2, 1, 1)
+
+        self.main_log_layout.addWidget(self.OVG4_temp_check, 1, 3, 1, 1)
+        self.main_log_layout.addWidget(self.OVG4_sample_flow_check, 2, 3, 1, 1)
+        self.main_log_layout.addWidget(self.thermo_1_check, 3, 3, 1, 1)
+        self.main_log_layout.addWidget(self.thermo_2_check, 4, 3, 1, 1)
+
         self.main_log_layout.addWidget(self.user_lbl, 7, 0, 1, 1)
         self.main_log_layout.addWidget(self.user_input, 7, 1, 1, 3)
 
@@ -553,27 +540,29 @@ class Main_Interface(QMainWindow):
         self.log_dlg.exec()
 
     def select_all_log_dlg(self):
-        if self.allSelected:
-            self.allSelected = False
-            self.selectAllBtn.setText('Select All')
+        if self.all_selected:
+            self.all_selected = False
+            self.select_all_btn.setText('Select All')
 
-            for selectedBtn in (self.temperatureCheck, self.pressureCheck, self.humidityCheck,
-                                self.ch1Check, self.ch2Check, self.ch3Check, self.ch4Check,
-                                self.MFC1Check, self.MFC2Check, self.MFC3Check, self.sensor1Check,
-                                self.sensor2Check, self.sensor3Check, self.sensor4Check):
+            for selected_btn in (self.flow_temp_check, self.flow_press_check, self.flow_humid_check,
+                                self.ch1_check, self.ch2_check, self.ch3_check, self.ch4_check,
+                                self.MICS5524_check, self.OVG4_temp_check, self.OVG4_sample_flow_check,
+                                self.thermo_1_check, self.thermo_2_check):
+                
+                if selected_btn.isEnabled():
+                    selected_btn.setChecked(False)
 
-                selectedBtn.setChecked(False)
+        elif not self.all_selected:
+            self.all_selected = True
+            self.select_all_btn.setText('Unselect All')
 
-        elif not self.allSelected:
-            self.allSelected = True
-            self.selectAllBtn.setText('Unselect All')
-
-            for selectedBtn in (self.temperatureCheck, self.pressureCheck, self.humidityCheck,
-                                self.ch1Check, self.ch2Check, self.ch3Check, self.ch4Check,
-                                self.MFC1Check, self.MFC2Check, self.MFC3Check, self.sensor1Check,
-                                self.sensor2Check, self.sensor3Check, self.sensor4Check):
-
-                selectedBtn.setChecked(True)
+            for selected_btn in (self.flow_temp_check, self.flow_press_check, self.flow_humid_check,
+                                self.ch1_check, self.ch2_check, self.ch3_check, self.ch4_check,
+                                self.MICS5524_check, self.OVG4_temp_check, self.OVG4_sample_flow_check,
+                                self.thermo_1_check, self.thermo_2_check):
+                
+                if selected_btn.isEnabled():
+                    selected_btn.setChecked(True)
 
     def create_log_file(self):
         
@@ -587,89 +576,89 @@ class Main_Interface(QMainWindow):
         self.header_string = f'User: {self.user_name}\nDate: {self.date}\n'
 
         self.first_line = []
-        self.creating_first_log_line()
+        self.create_first_log_line()
     
         np.savetxt(self.log_file_name, np.column_stack(self.first_line),
                    fmt='%s', delimiter='   ', header=self.header_string)
 
-        self.log_running = True
+        self.general_control['data_logging'] = True
 
-    def creating_first_log_line(self):
-        self.first_line.append('Time(s)')
+    def create_first_log_line(self):
+        self.first_line.append('Time_(s)')
 
-        if self.temperature_check.isChecked():
-            self.first_line.append('flowTemperature(C)')
+        if self.flow_temp_check.isChecked():
+            self.first_line.append('flow_temp_C')
 
-        if self.pressure_check.isChecked():
-            self.first_line.append('flowPressure(kPa)')
+        if self.flow_press_check.isChecked():
+            self.first_line.append('flow_press_kPa')
 
-        if self.humidity_check.isChecked():
-            self.first_line.append('flowHumidity(%)')
+        if self.flow_humid_check.isChecked():
+            self.first_line.append('flow_humid_%')
 
         if self.ch1_check.isChecked():
-            self.first_line.append('ch1Resistance(ohm)')
+            self.first_line.append('ch1_resist_Ohm')
 
         if self.ch2_check.isChecked():
-            self.first_line.append('ch2Resistance(ohm)')
+            self.first_line.append('ch2_resist_Ohm')
 
         if self.ch3_check.isChecked():
-            self.first_line.append('ch3Resistance(ohm)')
+            self.first_line.append('ch3_resist_Ohm')
 
         if self.ch4_check.isChecked():
-            self.first_line.append('ch4Resistance(ohm)')
+            self.first_line.append('ch4_resist_Ohm')
+        
+        if self.thermo_1_check.isChecked():
+            self.first_line.append('thermocouple_1')
+        
+        if self.thermo_2_check.isChecked():
+            self.first_line.append('thermocouple_2')
 
-        if self.OVG4_temperature_check.isChecked():
-            self.first_line.append('OVG4_temp(C)')
+        if self.OVG4_temp_check.isChecked():
+            self.first_line.append('OVG4_temp_C')
 
         if self.OVG4_sample_flow_check.isChecked():
-            self.first_line.append('OVG4_sample_flow(sccm)')
+            self.first_line.append('OVG4_sample_flow_sccm')
 
-        if self.MQ2_check.isChecked():
-            self.first_line.append('MQ2_signal (a.u.)')
-        
-        if self.MQ3_check.isChecked():
-            self.first_line.append('MQ3_signal(a.u.)')
-        
         if self.MICS5524_check.isChecked():
-            self.first_line.append('MICS5524_signal(a.u.)')
+            self.first_line.append('MICS5524_signal_a.u.')
 
         if self.MICS6814_CO_check.isChecked():
-            self.first_line.append('MICS6814_CO(a.u.)')
+            self.first_line.append('MICS6814_CO_a.u.')
 
         if self.MICS6814_NH3_check.isChecked():
-            self.first_line.append('MICS6814_NH3_signal(a.u.)')
+            self.first_line.append('MICS6814_NH3_signal_a.u.')
 
         if self.MICS6814_NO2_check.isChecked():
-            self.first_line.append('MICS6814_NO2_signal(a.u.)')
+            self.first_line.append('MICS6814_NO2_signal_a.u.')
 
     def log_data(self):
         self.writing_data = open(window.log_file_name, 'a')
 
-        self.writing_data.write(f'{self.time_read:.3f}'+'   ')
+        self.writing_data.write(f'{self.time_read:.1f}'+'   ')
 
-        if self.temperature_check.isChecked():
+        """ 
+        TO_DO 
+        Implement these variables to LOG
+
+        self.ch1_check, self.ch2_check, self.ch3_check, self.ch4_check,
+        self.OVG4_temp_check, self.OVG4_sample_flow_check,
+        self.thermo_2_check
+         """
+
+        if self.flow_temp_check.isChecked():
             self.writing_data.write(f'{self.flow_temp_read:.3f}'+'  ')
         
-        if self.pressure_check.isChecked():
-            self.writing_data.write(f'{self.flow_pres_read:.3f}'+'  ')
+        if self.flow_press_check.isChecked():
+            self.writing_data.write(f'{self.flow_press_read:.3f}'+'  ')
 
-        if self.humidity_check.isChecked():
-            self.writing_data.write(f'{self.flow_hum_read:.3f}'+'  ')
-
-        if self.MQ3_check.isChecked():
-            self.writing_data.write(f'{self.MQ3_read:.3f}'+'  ')
+        if self.flow_humid_check.isChecked():
+            self.writing_data.write(f'{self.flow_humid_read:.3f}'+'  ')
 
         if self.MICS5524_check.isChecked():
-            self.writing_data.write(f'{self.MICS5524_read:.3f}'+'  ')
+            self.writing_data.write(f'{self.analyte_read:.3f}'+'  ')
 
-        if self.MICS6814_CO_check.isChecked():
-            self.writing_data.write(f'{self.MICS6814_CO_read:.3f}'+'  ')
-
-        if self.MICS6814_NH3_check.isChecked():
-            self.writing_data.write(f'{self.MICS6814_NH3_read:.3f}'+'  ')
-
-        if self.MICS6814_NO2_check.isChecked():
-            self.writing_data.write(f'{self.MICS6814_NO2_read:.3f}'+'  ')
+        if self.thermo_1_check.isChecked():
+            self.writing_data.write(f'{self.thermocouple_1_read:.3f}'+'  ')
 
         self.writing_data.write('\n')
         self.writing_data.close()
@@ -785,8 +774,7 @@ class Main_Interface(QMainWindow):
         else:
             self.main_system = System_Commands(serial_port=self.config['address'][0])
             self.general_control['controller_connection'] = True
-            print('bigode')
-            print(self.general_control['controller_connection'])
+
             self.start_stop_btn.setDisabled(False)
             self.controller_status_lbl.setText('ON')
             self.controller_status_lbl.setStyleSheet(
@@ -813,13 +801,13 @@ class Main_Interface(QMainWindow):
         self.main_graph.time_data.append(self.time_read)
         
         if self.general_control['controller_connection']:
-            self.thermocouple_read = self.main_system.read_thermocouple_1()
+            self.thermocouple_1_read = self.main_system.read_thermocouple_1()
             self.flow_temp_read = self.main_system.read_flow_temp()
             self.flow_press_read = self.main_system.read_flow_press()
             self.flow_humid_read = self.main_system.read_flow_humidity()
             self.analyte_read = self.main_system.read_MICS5524()
 
-            self.main_graph.thermocouple_1_data.append(self.thermocouple_read)
+            self.main_graph.thermocouple_1_data.append(self.thermocouple_1_read)
             self.main_graph.bme_temp_data.append(self.flow_temp_read)
             self.main_graph.bme_press_data.append(self.flow_press_read)
             self.main_graph.bme_humid_data.append(self.flow_humid_read)
@@ -827,7 +815,7 @@ class Main_Interface(QMainWindow):
 
         self.update_top_widget() 
         
-        if self.log_running:
+        if self.general_control['data_logging']:
             self.log_data()
 
         if len(self.main_graph.time_data) > self.main_graph.limit:
@@ -844,7 +832,7 @@ class Main_Interface(QMainWindow):
 
     def update_top_widget(self):
         if self.general_control['controller_connection']:
-            self.temp_cell_1_reading.setText(f'{self.thermocouple_read:.2f}')
+            self.temp_cell_1_reading.setText(f'{self.thermocouple_1_read:.2f}')
             self.flow_temp_reading.setText(f'{self.flow_temp_read:.2f}')
             self.flow_press_reading.setText(f'{self.flow_press_read:.2f}')
             self.flow_humidity_reading.setText(f'{self.flow_humid_read:.2f}')
@@ -853,14 +841,22 @@ class Main_Interface(QMainWindow):
     def restart_plot(self):
         self.main_graph.time_data.clear()       
         self.main_graph.thermocouple_1_data.clear()
+        self.main_graph.bme_temp_data.clear()
+        self.main_graph.bme_press_data.clear()
+        self.main_graph.bme_humid_data.clear()
+        self.main_graph.mics_data.clear()    
 
     def clear_plot(self):
         self.last_point = self.main_graph.time_data[-1]
         self.restart_plot()
         self.main_graph.time_data.append(self.last_point)
         
-        if self.controller_connection:
-            self.main_graph.thermocouple_1_data.append(self.main_system.read_thermocouple())
+        if self.general_control['controller_connection']:
+            self.main_graph.thermocouple_1_data.append(self.main_system.read_thermocouple_1())
+            self.main_graph.bme_temp_data.append(self.main_system.read_flow_temp())
+            self.main_graph.bme_press_data.append(self.main_system.read_flow_press())
+            self.main_graph.bme_humid_data.append(self.main_system.read_flow_humidity())
+            self.main_graph.mics_data.append(self.main_system.read_MICS5524())    
 
     def warning_dlg(self, value='not supported yet'):
         self.value = value
