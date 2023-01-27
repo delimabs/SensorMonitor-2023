@@ -3,12 +3,12 @@
 #include <Adafruit_BME280.h> //inclusao da biblioteca especifica do sensor BMP280
 #include <max6675.h>
 
-// ON-OFF warnings:
-int green_led = 6;
+// ON-OFF warnings and relays:
+int relay_1 = 2;
+int relay_2 = 3;
+int green_led = 4;
 int yellow_led = 5;
-int red_led = 4;
-int relay_1 = 3;
-int relay_2 = 2;
+int red_led = 6;
 
 Adafruit_BME280 bme; //cria objeto tipo Adafruit_BME280 (I2C)
 
@@ -34,6 +34,7 @@ void setup()
   pinMode(yellow_led, OUTPUT);
   pinMode(red_led, OUTPUT);
   pinMode(relay_1, OUTPUT);
+  pinMode(relay_2, OUTPUT);
   delay(50);
 }
 
@@ -142,6 +143,19 @@ void command()
           newData = false;
         }
       }
+      else if (receivedChars[1] == '5')
+      {
+        if (receivedChars[2] == 'H')
+        {
+          digitalWrite(relay_2, HIGH);
+          newData = false;
+        }
+        else if (receivedChars[2] == 'L')
+        {
+          digitalWrite(relay_2, LOW);
+          newData = false;
+        }
+      }    
     }
 
     //Sensor communication - BME280 and MICS5524
