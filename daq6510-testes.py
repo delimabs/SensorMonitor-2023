@@ -36,17 +36,17 @@ print(multimeter.read()) """
 # multimeter.write(':SYSTem:BEEPer 300, 1')
 
 
-"""
+
 #READ ONE CHANNEL
 multimeter.write('*RST')
-multimeter.write('SENSe:FUNCtion "RESistance", (@111)')
-multimeter.write('ROUTe:CLOSe (@111)')
+multimeter.write('SENSe:FUNCtion "RESistance", (@101)')
+multimeter.write('ROUTe:CLOSe (@101)')
 multimeter.write('READ?')
 print(multimeter.query('TRAC:DATA? 1, 1, "defbuffer1", READ'))
+
+
+
 """
-
-
-
 ### READ FOUR CHANNELS
 multimeter.write('*RST')
 multimeter.write('SENSe:FUNCtion "RESistance", (@101, 102, 111, 112)')
@@ -66,7 +66,5 @@ test = []
 
 for element in results:
     test.append(float(element))
-
-    
-print(test)
+print(test)"""
 

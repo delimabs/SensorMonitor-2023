@@ -33,6 +33,8 @@ class Main_Graph(pg.GraphicsLayoutWidget):
 
         self.VOVG_furnace_data = []
         self.VOVG_sample_flow_data = []
+
+        self.resistance_data = []
                
     def plot_data(self):
         if self.plotting_control['op_temp_1']:
@@ -53,6 +55,10 @@ class Main_Graph(pg.GraphicsLayoutWidget):
         elif self.plotting_control['VOVG']:
             self.VOVG_furnace_plotItem.setData(self.time_data, self.VOVG_furnace_data)
             self.VOVG_sample_flow_plotItem.setData(self.time_data, self.VOVG_sample_flow_data)
+        
+        elif self.plotting_control['Resistance']:
+            self.ch1_plot_item.setData(self.time_data, self.resistance_data)
+            
   
     def add_thermo_1(self):
         self.clear()
@@ -194,6 +200,25 @@ class Main_Graph(pg.GraphicsLayoutWidget):
                                                           symbolSize=7,
                                                           symbol='o')
 
+    def add_resistance(self):
+        self.clear()
 
+        for key in self.plotting_control.keys():
+            self.plotting_control[key] = False
+
+        self.plotting_control['Resistance'] = True
+
+        self.ch1_plot = self.addPlot(0, 0, 1, 1, title='Channel 1 Resistance')
+        self.ch1_plot.showGrid(x=True, y=True)
+        self.ch1_plot.setLabels(left='Resistance, kOhm', bottom='Time, s')
+
+        self.ch1_plot_item = self.ch1_plot.plot([],
+                                                        [],
+                                                         pen=pg.mkPen(color=(0, 0, 0),
+                                                                     width=1,
+                                                                     style=QtCore.Qt.SolidLine),
+                                                            symbolBrush=(0, 0, 0),
+                                                            symbolSize=5,
+                                                            symbol='o')
 
 

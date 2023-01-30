@@ -11,6 +11,7 @@ from PySide6.QtWidgets import (QApplication, QMainWindow, QSpacerItem, QWidget, 
 
 from commands import System_Commands
 from VOVGInterface import VOVG_module
+from daq6510 import DAQ6510
 from main_graph import Main_Graph
 
 
@@ -190,15 +191,15 @@ class Main_Interface(QMainWindow):
         self.VOVG_status_lbl.setAlignment(QtCore.Qt.AlignTop | QtCore.Qt.AlignCenter)
         self.VOVG_status_lbl.setStyleSheet("background-color: rgb(250, 80, 80);")
 
-        self.start_flow_btn = QPushButton(self.connect_board_widget)
-        self.start_flow_btn.setText('Start flow')
-        # self.start_flow_btn.clicked.connect(self.start_flow)
+        self.start_daq_btn = QPushButton(self.connect_board_widget)
+        self.start_daq_btn.setText('Keithley DAQ')
+        self.start_daq_btn.clicked.connect(self.daq6510_connect)
 
-        self.status_flow_lbl = QLabel(self.connect_board_widget)
-        self.status_flow_lbl.setText('OFF')
-        self.status_flow_lbl.setFixedSize(65, 20)
-        self.status_flow_lbl.setAlignment(QtCore.Qt.AlignTop | QtCore.Qt.AlignCenter)
-        self.status_flow_lbl.setStyleSheet("background-color: rgb(250, 80, 80);")
+        self.status_daq_lbl = QLabel(self.connect_board_widget)
+        self.status_daq_lbl.setText('OFF')
+        self.status_daq_lbl.setFixedSize(65, 20)
+        self.status_daq_lbl.setAlignment(QtCore.Qt.AlignTop | QtCore.Qt.AlignCenter)
+        self.status_daq_lbl.setStyleSheet("background-color: rgb(250, 80, 80);")
 
         # Layout
         self.connection_board_layout = QGridLayout(self.connect_board_widget)
@@ -207,8 +208,8 @@ class Main_Interface(QMainWindow):
         self.connection_board_layout.addWidget(self.controller_status_lbl, 1, 1, 1, 1)
         self.connection_board_layout.addWidget(self.VOVG_connect_btn, 2, 0, 1, 1)
         self.connection_board_layout.addWidget(self.VOVG_status_lbl, 2, 1, 1, 1)
-        self.connection_board_layout.addWidget(self.start_flow_btn, 3, 0, 1, 1)
-        self.connection_board_layout.addWidget(self.status_flow_lbl, 3, 1, 1, 1)
+        self.connection_board_layout.addWidget(self.start_daq_btn, 3, 0, 1, 1)
+        self.connection_board_layout.addWidget(self.status_daq_lbl, 3, 1, 1, 1)
 
     def start_op_temp_monitor(self):
         self.op_temp_monitor_lbl = QLabel(self.probe_temp_monitor_widget)
@@ -374,11 +375,6 @@ class Main_Interface(QMainWindow):
         self.ch2_lbl = QLabel(self.resistance_monitor_widget)
         self.ch2_lbl.setText('ch02:')
 
-        self.ch3_lbl = QLabel(self.resistance_monitor_widget)
-        self.ch3_lbl.setText('ch03:')
-
-        self.ch4_lbl = QLabel(self.resistance_monitor_widget)
-        self.ch4_lbl.setText('ch04:')
 
         self.ch1_reading = QLabel(self.resistance_monitor_widget)
         self.ch1_reading.setLineWidth(1)
@@ -396,26 +392,10 @@ class Main_Interface(QMainWindow):
         self.ch2_reading.setFixedWidth(70)
         self.ch2_reading.setText('00000.00')
 
-        self.ch3_reading = QLabel(self.resistance_monitor_widget)
-        self.ch3_reading.setLineWidth(1)
-        self.ch3_reading.setFrameStyle(QFrame.Panel | QFrame.Sunken)
-        self.ch3_reading.setAlignment(
-            QtCore.Qt.AlignTop | QtCore.Qt.AlignHCenter)
-        self.ch3_reading.setFixedWidth(70)
-        self.ch3_reading.setText('00000.00')
-
-        self.ch4_reading = QLabel(self.resistance_monitor_widget)
-        self.ch4_reading.setLineWidth(1)
-        self.ch4_reading.setFrameStyle(QFrame.Panel | QFrame.Sunken)
-        self.ch4_reading.setAlignment((
-            QtCore.Qt.AlignTop | QtCore.Qt.AlignHCenter))
-        self.ch4_reading.setFixedWidth(70)
-        self.ch4_reading.setText('00000.00')
-
         self.resistance_monitor_show_btn = QPushButton(
             self.resistance_monitor_widget)
         self.resistance_monitor_show_btn.setText('Show')
-        # self.resistanceShowBtn.clicked.connect(self.showRes)
+        self.resistance_monitor_show_btn.clicked.connect(self.main_graph.add_resistance)
 
         self.resistance_layout = QGridLayout(self.resistance_monitor_widget)
         self.resistance_layout.addWidget(
@@ -424,10 +404,7 @@ class Main_Interface(QMainWindow):
         self.resistance_layout.addWidget(self.ch1_reading, 1, 1, 1, 1)
         self.resistance_layout.addWidget(self.ch2_lbl, 2, 0, 1, 1)
         self.resistance_layout.addWidget(self.ch2_reading, 2, 1, 1, 1)
-        self.resistance_layout.addWidget(self.ch3_lbl, 1, 2, 1, 1)
-        self.resistance_layout.addWidget(self.ch3_reading, 1, 3, 1, 1)
-        self.resistance_layout.addWidget(self.ch4_lbl, 2, 2, 1, 1)
-        self.resistance_layout.addWidget(self.ch4_reading, 2, 3, 1, 1)
+
         self.resistance_layout.addItem(QSpacerItem(1, 10), 3, 0, 1, 4)
         self.resistance_layout.addWidget(
             self.resistance_monitor_show_btn, 4, 0, 1, 4, QtCore.Qt.AlignBottom | QtCore.Qt.AlignHCenter)
@@ -640,41 +617,32 @@ class Main_Interface(QMainWindow):
 
         if self.flow_humid_check.isChecked():
             self.first_line.append('flow_humid_%')
-
-        if self.ch1_check.isChecked():
-            self.first_line.append('ch1_resist_Ohm')
-
-        if self.ch2_check.isChecked():
-            self.first_line.append('ch2_resist_Ohm')
-     
+        
+        if self.MICS5524_check.isChecked():
+            self.first_line.append('MICS5524_signal_a.u.')
+        
         if self.thermo_1_check.isChecked():
             self.first_line.append('thermocouple_1')
         
         if self.thermo_2_check.isChecked():
             self.first_line.append('thermocouple_2')
-
+        
         if self.VOVG_temp_check.isChecked():
             self.first_line.append('VOVG_temp_C')
 
         if self.VOVG_sample_flow_check.isChecked():
             self.first_line.append('VOVG_sample_flow_sccm')
 
-        if self.MICS5524_check.isChecked():
-            self.first_line.append('MICS5524_signal_a.u.')
+        if self.ch1_check.isChecked():
+            self.first_line.append('ch1_resist_Ohm')
+
+        if self.ch2_check.isChecked():
+            self.first_line.append('ch2_resist_Ohm')
 
     def log_data(self):
         self.writing_data = open(window.log_file_name, 'a')
 
         self.writing_data.write(f'{self.time_read:.1f}'+'   ')
-
-        """ 
-        TO_DO 
-        Implement these variables to LOG
-
-        self.ch1_check, self.ch2_check, self.ch3_check, self.ch4_check,
-        self.OVG4_temp_check, self.OVG4_sample_flow_check,
-        self.thermo_2_check
-         """
 
         if self.flow_temp_check.isChecked():
             self.writing_data.write(f'{self.flow_temp_read:.3f}'+'  ')
@@ -870,6 +838,20 @@ class Main_Interface(QMainWindow):
         self.VOVG_instrument.set_furnace_SP1(furnace_sp1)
         self.VOVG_instrument.set_sample_flow_SP1(sample_flow_sp1)
 
+    ### DAQ6510
+    def daq6510_connect(self):
+        if not self.general_control['daq6510_connection']:
+            self.general_control['daq6510_connection'] = True
+            self.multimeter = DAQ6510()
+            self.multimeter.beep()
+            self.status_daq_lbl.setText('ON')
+            self.status_daq_lbl.setStyleSheet("background-color: rgb(80, 250, 80);")
+            
+        else:
+            self.general_control['daq6510_connection'] = False
+            self.status_daq_lbl.setText('OFF')
+            self.status_daq_lbl.setStyleSheet("background-color: rgb(250, 80, 80);")
+
     ### Controlling and Acquisition
     def system_connection(self):
 
@@ -923,7 +905,6 @@ class Main_Interface(QMainWindow):
             self.main_graph.mics_data.append(self.analyte_read)
      
         if self.general_control['VOVG_connection']:
-
             self.furnace_temp_read = float(self.VOVG_instrument.read_furnace_temp())
             self.sample_flow_read = float(self.VOVG_instrument.read_sample_flow())*10
 
@@ -932,6 +913,12 @@ class Main_Interface(QMainWindow):
 
             self.main_graph.VOVG_furnace_data.append(self.furnace_temp_read)
             self.main_graph.VOVG_sample_flow_data.append(self.sample_flow_read)
+
+        if self.general_control['daq6510_connection']:
+            self.resistance_read = float(self.multimeter.read_ch_res(slot='1',
+                                                            ch_number='01'))
+
+            self.main_graph.resistance_data.append(self.resistance_read)
 
         self.update_top_widget() 
         
@@ -951,7 +938,10 @@ class Main_Interface(QMainWindow):
             if self.general_control['VOVG_connection']:
                 self.main_graph.VOVG_furnace_data.pop(0)
                 self.main_graph.VOVG_sample_flow_data.pop(0)
-        
+
+            if self.general_control['daq6510_connection']:
+                self.main_graph.resistance_data.pop(0)
+    
         self.main_graph.plot_data()
 
     def update_top_widget(self):
@@ -965,6 +955,9 @@ class Main_Interface(QMainWindow):
         if self.general_control['VOVG_connection']:
             self.furnace_temp_reading.setText(f'{self.furnace_temp_read:.2f}')
             self.sample_flow_reading.setText(f'{self.sample_flow_read:.2f}')
+        
+        if self.general_control['daq6510_connection']:
+            self.ch1_reading.setText(f'{self.resistance_read:.2f}')
 
     def restart_plot(self):
         self.main_graph.time_data.clear()       
@@ -974,7 +967,8 @@ class Main_Interface(QMainWindow):
         self.main_graph.bme_humid_data.clear()
         self.main_graph.mics_data.clear()
         self.main_graph.VOVG_furnace_data.clear()
-        self.main_graph.VOVG_sample_flow_data.clear()    
+        self.main_graph.VOVG_sample_flow_data.clear()
+        self.main_graph.resistance_data.clear()    
 
     def clear_plot(self):
         self.last_point = self.main_graph.time_data[-1]
@@ -989,10 +983,13 @@ class Main_Interface(QMainWindow):
             self.main_graph.mics_data.append(self.main_system.read_MICS5524())
 
         if self.general_control['VOVG_connection']:
+            self.main_graph.VOVG_furnace_data.append(float(self.VOVG_instrument.read_furnace_temp()))
+            self.main_graph.VOVG_sample_flow_data.append(float(self.VOVG_instrument.read_furnace_temp())*10)
+        
+        if self.general_control['daq6510_connection']:
+            self.main_graph.resistance_data.append(float(self.multimeter.read_ch_res(slot='1',
+                                                            ch_number='01')))
 
-            self.furnace_temp_read = float(self.VOVG_instrument.read_furnace_temp())
-            self.sample_flow_read = float(self.VOVG_instrument.read_sample_flow())*10
-    
     def warning_dlg(self, value='not supported yet'):
         self.value = value
         print('not supported yet')
