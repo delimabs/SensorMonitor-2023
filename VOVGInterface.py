@@ -1,6 +1,6 @@
 import minimalmodbus
 
-class OVG4_module():
+class VOVG_module():
     def __init__(self, serial_port='COM5', baud_rate=9600, furnace_addr=3, sample_flow_addr=4):
         
         self.serial_port = serial_port
@@ -74,6 +74,11 @@ class OVG4_module():
 
     def ieee_754_conversion(n, sgn_len=1, exp_len=8, mant_len=23):
         """
+        I am using the conversion function from AlexEshoo. 
+        
+        Available here:
+        https://gist.github.com/AlexEshoo/d3edc53129ed010b0a5b693b88c7e0b5
+        
         Converts an arbitrary precision Floating Point number.
         Note: Since the calculations made by python inherently use floats, the accuracy is poor at high precision.
         :param n: An unsigned integer of length `sgn_len` + `exp_len` + `mant_len` to be decoded as a float

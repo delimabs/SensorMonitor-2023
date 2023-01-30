@@ -24,10 +24,15 @@ class Main_Graph(pg.GraphicsLayoutWidget):
         self.time_data = []
 
         self.thermocouple_1_data = []
+
         self.bme_temp_data = []
         self.bme_press_data = []
         self.bme_humid_data = []
+
         self.mics_data = []
+
+        self.VOVG_furnace_data = []
+        self.VOVG_sample_flow_data = []
                
     def plot_data(self):
         if self.plotting_control['op_temp_1']:
@@ -44,6 +49,10 @@ class Main_Graph(pg.GraphicsLayoutWidget):
         
         elif self.plotting_control['MICS5524']:
             self.mics_plotItem.setData(self.time_data, self.mics_data)
+        
+        elif self.plotting_control['VOVG']:
+            self.VOVG_furnace_plotItem.setData(self.time_data, self.VOVG_furnace_data)
+            self.VOVG_sample_flow_plotItem.setData(self.time_data, self.VOVG_sample_flow_data)
   
     def add_thermo_1(self):
         self.clear()
@@ -150,6 +159,40 @@ class Main_Graph(pg.GraphicsLayoutWidget):
                                                 symbolSize=7,
                                                 symbol='o')  
 
+    def add_VOVG(self):
+        self.clear()
+        for key in self.plotting_control.keys():
+            self.plotting_control[key] = False
+        
+        self.plotting_control['VOVG'] = True
+        
+        self.VOVG_furnace_fig = self.addPlot(0, 0, 1, 1, title='OVG Furnace Temperature')
+        self.VOVG_furnace_fig.showGrid(x=True, y=True)
+        self.VOVG_furnace_fig.setLabels(left='Temperature (C)', bottom='Time, s')
+
+        self.VOVG_sample_flow_fig = self.addPlot(0, 1, 1, 1, title='OVG sample flow')
+        self.VOVG_sample_flow_fig.showGrid(x=True, y=True)
+        self.VOVG_sample_flow_fig.setLabels(left='Sample flow (sccm)', bottom='Time, s')
+
+        self.VOVG_furnace_plotItem = self.VOVG_furnace_fig.plot([],
+                                                          [],
+                                                          pen=pg.mkPen(color=(0, 0, 0),
+                                                                       width=2,
+                                                                       style=QtCore.Qt.DashLine),
+                                                          symbolBrush=(
+                                                              0, 0, 0),
+                                                          symbolSize=7,
+                                                          symbol='o')
+
+        self.VOVG_sample_flow_plotItem = self.VOVG_sample_flow_fig.plot([],
+                                                          [],
+                                                          pen=pg.mkPen(color=(0, 0, 0),
+                                                                       width=2,
+                                                                       style=QtCore.Qt.DashLine),
+                                                          symbolBrush=(
+                                                              0, 0, 0),
+                                                          symbolSize=7,
+                                                          symbol='o')
 
 
 

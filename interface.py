@@ -10,6 +10,7 @@ from PySide6.QtWidgets import (QApplication, QMainWindow, QSpacerItem, QWidget, 
                                QSizePolicy, QDockWidget, QRadioButton)
 
 from commands import System_Commands
+from VOVGInterface import VOVG_module
 from main_graph import Main_Graph
 
 
@@ -31,13 +32,10 @@ class Main_Interface(QMainWindow):
 
         #This dictionary holds the variables for general control of the data flow
         self.general_control = {'controller_connection': False,
-                                'flow_on': False, 
+                                'VOVG_connection': False, 
+                                'daq6510_connection': False,
                                 'start_stop_control': False, 
                                 'data_logging': False}
-        
-        #NEEDS TO SUBSTITUTE THESE VARIABLES
-        self.controller_flow = False
-        self.start_stop_control = False
         
         self.period = 1000
         self.timer = QtCore.QTimer()
@@ -47,12 +45,13 @@ class Main_Interface(QMainWindow):
         self.start_main_menu()
         self.start_connection_board()
         self.start_op_temp_monitor()
+        self.start_VOVG_monitor()
         self.start_flow_info_monitor()
         self.start_resistance_monitor()
         self.start_analyte_monitor()
         self.plot_control_menu()
 
-    # Main Menu     
+    ### Main Menu     
     def start_main_menu(self):
         self.main_menu = self.menuBar()
         self.file_menu = self.main_menu.addMenu('File')
@@ -66,6 +65,9 @@ class Main_Interface(QMainWindow):
         self.plot_action = self.settings_menu.addAction('Plot settings')
         self.plot_action.triggered.connect(self.open_plot_settings_dlg)
 
+        self.VOVG_action = self.settings_menu.addAction('VOVG settings')
+        self.VOVG_action.triggered.connect(self.VOVG_controller_dlg)
+
         self.install_probe_monitor = self.settings_menu.addAction('Install thermocouple')
     
         self.about_action = self.main_menu.addAction('About')
@@ -73,7 +75,7 @@ class Main_Interface(QMainWindow):
         
         self.exit_action.triggered.connect(sys.exit)
 
-    # Main Layout
+    ### Main Layout
     def start_main_layout(self):
         """
         This function creates the main layout of the GUI. #1 It defines the main graph
@@ -112,6 +114,7 @@ class Main_Interface(QMainWindow):
 
         self.probe_temp_monitor_widget = QWidget(self.dock_menu)
         self.flow_info_widget = QWidget(self.dock_menu)
+        self.VOVG_monitor_widget = QWidget(self.dock_menu)
         self.resistance_monitor_widget = QWidget(self.dock_menu)
         self.analyte_monitor_widget = QWidget(self.dock_menu)
         self.commands_widget = QWidget(self.dock_menu)
@@ -130,7 +133,10 @@ class Main_Interface(QMainWindow):
         self.line4.setLineWidth(2)        
         self.line5 = QFrame(self.dock_menu)
         self.line5.setFrameShape(QFrame.Shape.VLine)
-        self.line5.setLineWidth(2)  
+        self.line5.setLineWidth(2)
+        self.line6 = QFrame(self.dock_menu)          
+        self.line6.setFrameShape(QFrame.Shape.VLine)
+        self.line6.setLineWidth(2)  
 
         self.dock_layout =  QHBoxLayout(self.dock_menu)
         self.dock_layout.addWidget(self.connect_board_widget, alignment=QtCore.Qt.Alignment(QtCore.Qt.AlignCenter))
@@ -138,18 +144,20 @@ class Main_Interface(QMainWindow):
         self.dock_layout.addWidget(self.line1)
         self.dock_layout.addWidget(self.probe_temp_monitor_widget)
         self.dock_layout.addWidget(self.line2)
-        self.dock_layout.addWidget(self.flow_info_widget)
+        self.dock_layout.addWidget(self.VOVG_monitor_widget)
         self.dock_layout.addWidget(self.line3)
+        self.dock_layout.addWidget(self.flow_info_widget)
+        self.dock_layout.addWidget(self.line4)
         self.dock_layout.addWidget(self.resistance_monitor_widget)
-        self.dock_layout.addWidget(self.line4)        
+        self.dock_layout.addWidget(self.line5)        
         self.dock_layout.addWidget(self.analyte_monitor_widget)
-        self.dock_layout.addWidget(self.line5)
+        self.dock_layout.addWidget(self.line6)
         self.dock_layout.addWidget(self.commands_widget)
 
         self.spacer_1 = QSpacerItem(0,0, hData = QSizePolicy.Minimum, vData = QSizePolicy.Expanding)
         self.dock_layout.addSpacerItem(self.spacer_1)
 
-    # Dock menu objects
+    ### Dock menu objects
     def start_connection_board(self):
         """
         This board contains four buttons that should run the communication
@@ -173,8 +181,8 @@ class Main_Interface(QMainWindow):
         self.controller_status_lbl.setStyleSheet("background-color: rgb(250, 80, 80);")
         
         self.VOVG_connect_btn = QPushButton(self.connect_board_widget)
-        self.VOVG_connect_btn.setText('OVG4')
-        # self.VOVG_connect_btn.clicked.connect(self.OVG4_connect)
+        self.VOVG_connect_btn.setText('V-OVG')
+        self.VOVG_connect_btn.clicked.connect(self.VOVG_connect)
 
         self.VOVG_status_lbl = QLabel(self.connect_board_widget)
         self.VOVG_status_lbl.setText('OFF')
@@ -295,6 +303,54 @@ class Main_Interface(QMainWindow):
         self.flow_info_layout.addWidget(self.flow_humidity_reading, 3, 1, 1, 1)
         self.flow_info_layout.addWidget(self.flow_info_show_btn, 4, 0, 1, 2, QtCore.Qt.AlignBottom | QtCore.Qt.AlignHCenter)
 
+    def start_VOVG_monitor(self):
+        """
+        Create the OVG interface with real-time temperature and sample flow monitoring;
+        """
+
+        self.VOVG_Lbl = QLabel(self.VOVG_monitor_widget)
+        self.VOVG_Lbl.setText('OVG Monitor')
+        self.VOVG_Lbl.setFont(self.title_font)
+        self.VOVG_Lbl.setAlignment(
+            QtCore.Qt.AlignTop | QtCore.Qt.AlignHCenter)
+
+        self.furnace_temp_opt = QRadioButton(self.VOVG_monitor_widget)
+        self.furnace_temp_opt.setText('Furnace temp (C) :')
+        self.furnace_temp_opt.setChecked(True)
+
+        self.sample_flow_opt = QRadioButton(self.VOVG_monitor_widget)
+        self.sample_flow_opt.setText('Sample flow (sccm):')
+
+        self.furnace_temp_reading = QLabel(self.VOVG_monitor_widget)
+        self.furnace_temp_reading.setLineWidth(1)
+        self.furnace_temp_reading.setFrameStyle(QFrame.Panel | QFrame.Sunken)
+        self.furnace_temp_reading.setAlignment(QtCore.Qt.AlignHCenter)
+        self.furnace_temp_reading.setFixedWidth(60)
+        self.furnace_temp_reading.setText('000.00')
+
+        self.sample_flow_reading = QLabel(self.VOVG_monitor_widget)
+        self.sample_flow_reading.setLineWidth(1)
+        self.sample_flow_reading.setFrameStyle(QFrame.Panel | QFrame.Sunken)
+        self.sample_flow_reading.setAlignment(QtCore.Qt.AlignHCenter)
+        self.sample_flow_reading.setFixedWidth(60)
+        self.sample_flow_reading.setText('000.00')
+
+        self.VOVG_show_btn = QPushButton(self.VOVG_monitor_widget)
+        self.VOVG_show_btn.setText('Show')
+        self.VOVG_show_btn.clicked.connect(self.main_graph.add_VOVG)
+        self.VOVG_show_btn.setDisabled(True)
+        
+        # Layout GridBox
+        self.VOVG_board_layout = QGridLayout(self.VOVG_monitor_widget)
+        self.VOVG_board_layout.addWidget(self.VOVG_Lbl, 0, 0, 1, 2)
+        self.VOVG_board_layout.addWidget(self.furnace_temp_opt, 1, 0, 1, 1)
+        self.VOVG_board_layout.addWidget(self.furnace_temp_reading, 1, 1, 1, 1)
+        self.VOVG_board_layout.addWidget(self.sample_flow_opt, 2, 0, 1, 1)
+        self.VOVG_board_layout.addWidget(
+            self.sample_flow_reading, 2, 1, 1, 1)
+        self.VOVG_board_layout.addWidget(self.VOVG_show_btn, 3, 0, 1, 2,
+                                         QtCore.Qt.AlignBottom | QtCore.Qt.AlignHCenter)
+
     def show_bme(self):
         if self.flow_temp_opt.isChecked():
             self.main_graph.add_BME_temp()
@@ -409,6 +465,11 @@ class Main_Interface(QMainWindow):
             self.analyte_show_btn, 4, 0, 1, 1, QtCore.Qt.AlignBottom | QtCore.Qt.AlignHCenter)
 
     def plot_control_menu(self):
+        """
+            This function creates the buttons to control
+            plotting behavior. The user can clean the plot,
+            restart the plot and start or stop it.
+        """
         self.start_stop_btn = QPushButton(self.commands_widget)
         self.start_stop_btn.setText('Start')
         self.start_stop_btn.setDisabled(True)
@@ -427,7 +488,7 @@ class Main_Interface(QMainWindow):
         self.commands_menu_layout.addWidget(self.restart_btn)
         self.commands_menu_layout.addWidget(self.clear_btn)
     
-    # Logging options
+    ### Logging options
     def open_log_dlg(self):
         self.log_dlg = QDialog()
         self.log_dlg.resize(400, 200)
@@ -448,34 +509,27 @@ class Main_Interface(QMainWindow):
         # second column
         self.ch1_check = QCheckBox('ch1 Resistance', self.log_dlg)
         self.ch2_check = QCheckBox('ch2 Resistance', self.log_dlg)
-        self.ch3_check = QCheckBox('ch3 Resistance', self.log_dlg)
-        self.ch4_check = QCheckBox('ch4 Resistance', self.log_dlg)
         
         # third column
-        self.OVG4_temp_check = QCheckBox('OVG4 Temperature (C)', self.log_dlg)
-        self.OVG4_sample_flow_check = QCheckBox('OVG4 Sample Flow (sccm)', self.log_dlg)
+        self.VOVG_temp_check = QCheckBox('VOVG Temperature (C)', self.log_dlg)
+        self.VOVG_sample_flow_check = QCheckBox('VOVG Sample Flow (sccm)', self.log_dlg)
         self.thermo_1_check = QCheckBox('Thermocouple 1', self.log_dlg)
         self.thermo_2_check = QCheckBox('Thermocouple 2', self.log_dlg)
 
         # fourth column
         self.MICS5524_check = QCheckBox('MICS5524', self.log_dlg)
-        self.MICS6814_CO_check = QCheckBox('MICS6814-CO', self.log_dlg)
-        self.MICS6814_NH3_check = QCheckBox('MICS6814-NH3', self.log_dlg)
-        self.MICS6814_NO2_check = QCheckBox('MICS6814-NO2', self.log_dlg)
 
-        ## TO_DO create a function to control which sensor
-        # is being used.
-        self.MICS5524_check.setDisabled(False)
-        self.MICS6814_CO_check.setDisabled(True)
-        self.MICS6814_NH3_check.setDisabled(True)
-        self.MICS6814_NO2_check.setDisabled(True)
+
         self.thermo_2_check.setDisabled(True)
         self.ch1_check.setDisabled(True)
         self.ch2_check.setDisabled(True)
-        self.ch3_check.setDisabled(True)
-        self.ch4_check.setDisabled(True)
-        self.OVG4_temp_check.setDisabled(True)
-        self.OVG4_sample_flow_check.setDisabled(True)
+
+        if self.general_control['VOVG_connection']:
+            self.VOVG_temp_check.setDisabled(False)
+            self.VOVG_sample_flow_check.setDisabled(False)
+        else:
+            self.VOVG_temp_check.setDisabled(False)
+            self.VOVG_sample_flow_check.setDisabled(False)
 
         # objects line 1 under columns
         self.user_lbl = QLabel(self.log_dlg)
@@ -510,24 +564,18 @@ class Main_Interface(QMainWindow):
         # main layout
         self.main_log_layout.addWidget(self.log_lbl_1, 0, 0, 1, 4)
 
-        self.main_log_layout.addWidget(self.ch1_check, 1, 0, 1, 1)
-        self.main_log_layout.addWidget(self.ch2_check, 2, 0, 1, 1)
-        self.main_log_layout.addWidget(self.ch3_check, 3, 0, 1, 1)                                                       
-        self.main_log_layout.addWidget(self.ch4_check, 4, 0, 1, 1)
+        self.main_log_layout.addWidget(self.flow_temp_check, 1, 0, 1, 1)
+        self.main_log_layout.addWidget(self.flow_press_check, 2, 0, 1, 1)
+        self.main_log_layout.addWidget(self.flow_humid_check, 3, 0, 1, 1)
+        self.main_log_layout.addWidget(self.MICS5524_check, 4, 0, 1, 1)
 
-        self.main_log_layout.addWidget(self.MICS5524_check, 1, 1, 1, 1)
-        self.main_log_layout.addWidget(self.MICS6814_CO_check, 2, 1, 1, 1)
-        self.main_log_layout.addWidget(self.MICS6814_NH3_check, 3, 1, 1, 1)
-        self.main_log_layout.addWidget(self.MICS6814_NO2_check, 4, 1, 1, 1)
+        self.main_log_layout.addWidget(self.VOVG_temp_check, 1, 1, 1, 1)
+        self.main_log_layout.addWidget(self.VOVG_sample_flow_check, 2, 1, 1, 1)
+        self.main_log_layout.addWidget(self.thermo_1_check, 3, 1, 1, 1)
+        self.main_log_layout.addWidget(self.thermo_2_check, 4, 1, 1, 1)
 
-        self.main_log_layout.addWidget(self.flow_temp_check, 1, 2, 1, 1)
-        self.main_log_layout.addWidget(self.flow_press_check, 2, 2, 1, 1)
-        self.main_log_layout.addWidget(self.flow_humid_check, 3, 2, 1, 1)
-
-        self.main_log_layout.addWidget(self.OVG4_temp_check, 1, 3, 1, 1)
-        self.main_log_layout.addWidget(self.OVG4_sample_flow_check, 2, 3, 1, 1)
-        self.main_log_layout.addWidget(self.thermo_1_check, 3, 3, 1, 1)
-        self.main_log_layout.addWidget(self.thermo_2_check, 4, 3, 1, 1)
+        self.main_log_layout.addWidget(self.ch1_check, 1, 2, 1, 1)
+        self.main_log_layout.addWidget(self.ch2_check, 2, 2, 1, 1)
 
         self.main_log_layout.addWidget(self.user_lbl, 7, 0, 1, 1)
         self.main_log_layout.addWidget(self.user_input, 7, 1, 1, 3)
@@ -545,9 +593,8 @@ class Main_Interface(QMainWindow):
             self.select_all_btn.setText('Select All')
 
             for selected_btn in (self.flow_temp_check, self.flow_press_check, self.flow_humid_check,
-                                self.ch1_check, self.ch2_check, self.ch3_check, self.ch4_check,
-                                self.MICS5524_check, self.OVG4_temp_check, self.OVG4_sample_flow_check,
-                                self.thermo_1_check, self.thermo_2_check):
+                                self.ch1_check, self.ch2_check, self.MICS5524_check, self.VOVG_temp_check, 
+                                self.VOVG_sample_flow_check, self.thermo_1_check, self.thermo_2_check):
                 
                 if selected_btn.isEnabled():
                     selected_btn.setChecked(False)
@@ -557,9 +604,8 @@ class Main_Interface(QMainWindow):
             self.select_all_btn.setText('Unselect All')
 
             for selected_btn in (self.flow_temp_check, self.flow_press_check, self.flow_humid_check,
-                                self.ch1_check, self.ch2_check, self.ch3_check, self.ch4_check,
-                                self.MICS5524_check, self.OVG4_temp_check, self.OVG4_sample_flow_check,
-                                self.thermo_1_check, self.thermo_2_check):
+                                self.ch1_check, self.ch2_check, self.MICS5524_check, self.VOVG_temp_check, 
+                                self.VOVG_sample_flow_check, self.thermo_1_check, self.thermo_2_check):
                 
                 if selected_btn.isEnabled():
                     selected_btn.setChecked(True)
@@ -600,36 +646,21 @@ class Main_Interface(QMainWindow):
 
         if self.ch2_check.isChecked():
             self.first_line.append('ch2_resist_Ohm')
-
-        if self.ch3_check.isChecked():
-            self.first_line.append('ch3_resist_Ohm')
-
-        if self.ch4_check.isChecked():
-            self.first_line.append('ch4_resist_Ohm')
-        
+     
         if self.thermo_1_check.isChecked():
             self.first_line.append('thermocouple_1')
         
         if self.thermo_2_check.isChecked():
             self.first_line.append('thermocouple_2')
 
-        if self.OVG4_temp_check.isChecked():
-            self.first_line.append('OVG4_temp_C')
+        if self.VOVG_temp_check.isChecked():
+            self.first_line.append('VOVG_temp_C')
 
-        if self.OVG4_sample_flow_check.isChecked():
-            self.first_line.append('OVG4_sample_flow_sccm')
+        if self.VOVG_sample_flow_check.isChecked():
+            self.first_line.append('VOVG_sample_flow_sccm')
 
         if self.MICS5524_check.isChecked():
             self.first_line.append('MICS5524_signal_a.u.')
-
-        if self.MICS6814_CO_check.isChecked():
-            self.first_line.append('MICS6814_CO_a.u.')
-
-        if self.MICS6814_NH3_check.isChecked():
-            self.first_line.append('MICS6814_NH3_signal_a.u.')
-
-        if self.MICS6814_NO2_check.isChecked():
-            self.first_line.append('MICS6814_NO2_signal_a.u.')
 
     def log_data(self):
         self.writing_data = open(window.log_file_name, 'a')
@@ -659,6 +690,12 @@ class Main_Interface(QMainWindow):
 
         if self.thermo_1_check.isChecked():
             self.writing_data.write(f'{self.thermocouple_1_read:.3f}'+'  ')
+        
+        if self.VOVG_temp_check.isChecked():
+            self.writing_data.write(f'{self.furnace_temp_read:.3f}'+'  ')
+
+        if self.VOVG_sample_flow_check.isChecked():
+            self.writing_data.write(f'{self.sample_flow_read:.3f}'+'  ')
 
         self.writing_data.write('\n')
         self.writing_data.close()
@@ -678,7 +715,7 @@ class Main_Interface(QMainWindow):
         self.freq_aq_input.setValue(1)
         self.freq_aq_input.setValue(self.period/1000)
         
-         # Calculating Parameters
+        # Calculating Parameters
         self.points_per_second = 1/float(self.freq_aq_input.text())
         self.points_per_minute = self.points_per_second*60
         self.points_per_hour = self.points_per_second*3600
@@ -760,7 +797,79 @@ class Main_Interface(QMainWindow):
         self.period = 1000/(self.points_per_second)
         self.timer.setInterval(self.period)
         self.main_graph.limit = self.show_x_last_points_input.value()
-    
+
+    ### OwlStone V-OVG vapor generator
+    def VOVG_controller_dlg(self):
+        self.VOVG_dlg = QDialog()
+        self.VOVG_dlg.setWindowTitle('V-OVG settings')
+
+        self.VOVG_dlg_lbl = QLabel(self.VOVG_dlg)
+        self.VOVG_dlg_lbl.setText('Set furnace temperature and sample flow:')
+
+        self.VOVG_furnace_lbl = QLabel(self.VOVG_dlg)
+        self.VOVG_furnace_lbl.setText('Furnace temperature (C): ')
+        
+        self.VOVG_furnace_input = QDoubleSpinBox(self.VOVG_dlg)
+        self.VOVG_furnace_input.setMinimum(25)
+        self.VOVG_furnace_input.setMaximum(100)
+        self.VOVG_furnace_input.setValue(25)
+        self.VOVG_furnace_input.setFixedSize(65, 30)
+
+        self.VOVG_sample_flow_lbl = QLabel(self.VOVG_dlg)
+        self.VOVG_sample_flow_lbl.setText('Sample flow (sccm): ')
+
+        self.VOVG_sample_flow_input = QDoubleSpinBox(self.VOVG_dlg)
+        self.VOVG_sample_flow_input.setMinimum(0)
+        self.VOVG_sample_flow_input.setMaximum(250)
+        self.VOVG_sample_flow_input.setValue(20)
+        self.VOVG_sample_flow_input.setFixedSize(65, 30)
+        
+        self.VOVG_btn_widget = QWidget(self.VOVG_dlg)
+        
+        self.VOVG_dlg_set_btn = QPushButton(self.VOVG_btn_widget)
+        self.VOVG_dlg_set_btn.setText('Set')
+        self.VOVG_dlg_set_btn.clicked.connect(self.VOVG_set_settings)
+        
+        self.VOVG_dlg_cancel_btn  = QPushButton(self.VOVG_btn_widget)
+        self.VOVG_dlg_cancel_btn.setText('Cancel')
+        self.VOVG_dlg_cancel_btn.clicked.connect(self.VOVG_dlg.reject)
+
+        self.VOVG_btn_layout = QHBoxLayout(self.VOVG_btn_widget)
+        self.VOVG_btn_layout.addWidget(self.VOVG_dlg_set_btn)
+        self.VOVG_btn_layout.addWidget(self.VOVG_dlg_cancel_btn)
+
+        self.VOVG_dlg_main_layout = QGridLayout(self.VOVG_dlg)
+        self.VOVG_dlg_main_layout.addWidget(self.VOVG_dlg_lbl, 0, 0, 1, 2)
+        self.VOVG_dlg_main_layout.addWidget(self.VOVG_furnace_lbl, 1, 0, 1, 1)
+        self.VOVG_dlg_main_layout.addWidget(self.VOVG_furnace_input, 1, 1, 1, 1)
+        self.VOVG_dlg_main_layout.addWidget(self.VOVG_sample_flow_lbl, 2, 0, 1, 1)
+        self.VOVG_dlg_main_layout.addWidget(self.VOVG_sample_flow_input, 2, 1, 1, 1)
+        self.VOVG_dlg_main_layout.addWidget(self.VOVG_btn_widget, 3, 0, 1, 2)
+
+        self.VOVG_dlg.exec()
+
+    def VOVG_connect(self):
+        if not self.general_control['VOVG_connection']: 
+            self.general_control['VOVG_connection'] = True
+            self.VOVG_instrument = VOVG_module(serial_port=self.config['address'][1])
+            self.VOVG_show_btn.setDisabled(False)
+            self.start_stop_btn.setDisabled(False)
+            self.VOVG_status_lbl.setText('ON')
+            self.VOVG_status_lbl.setStyleSheet("background-color: rgb(80, 250, 80);")
+            
+        else:
+            self.general_control['VOVG_connection'] = False
+            self.VOVG_show_btn.setDisabled(True)
+            self.VOVG_status_lbl.setText('OFF')
+            self.VOVG_status_lbl.setStyleSheet("background-color: rgb(250, 80, 80);")
+
+    def VOVG_set_settings(self):
+        furnace_sp1 = float(self.VOVG_furnace_input.text())
+        sample_flow_sp1 = float(self.VOVG_sample_flow_input.text())/10
+        
+        self.VOVG_instrument.set_furnace_SP1(furnace_sp1)
+        self.VOVG_instrument.set_sample_flow_SP1(sample_flow_sp1)
+
     ### Controlling and Acquisition
     def system_connection(self):
 
@@ -812,6 +921,17 @@ class Main_Interface(QMainWindow):
             self.main_graph.bme_press_data.append(self.flow_press_read)
             self.main_graph.bme_humid_data.append(self.flow_humid_read)
             self.main_graph.mics_data.append(self.analyte_read)
+     
+        if self.general_control['VOVG_connection']:
+
+            self.furnace_temp_read = float(self.VOVG_instrument.read_furnace_temp())
+            self.sample_flow_read = float(self.VOVG_instrument.read_sample_flow())*10
+
+            self.furnace_temp_reading.setText(f'{self.furnace_temp_read:.2f}')
+            self.sample_flow_reading.setText(f'{self.sample_flow_read:.2f}')
+
+            self.main_graph.VOVG_furnace_data.append(self.furnace_temp_read)
+            self.main_graph.VOVG_sample_flow_data.append(self.sample_flow_read)
 
         self.update_top_widget() 
         
@@ -826,8 +946,12 @@ class Main_Interface(QMainWindow):
                 self.main_graph.bme_temp_data.pop(0)
                 self.main_graph.bme_press_data.pop(0)
                 self.main_graph.bme_humid_data.pop(0)
-                self.main_graph.mics_data.pop(0)        
+                self.main_graph.mics_data.pop(0)
 
+            if self.general_control['VOVG_connection']:
+                self.main_graph.VOVG_furnace_data.pop(0)
+                self.main_graph.VOVG_sample_flow_data.pop(0)
+        
         self.main_graph.plot_data()
 
     def update_top_widget(self):
@@ -837,6 +961,10 @@ class Main_Interface(QMainWindow):
             self.flow_press_reading.setText(f'{self.flow_press_read:.2f}')
             self.flow_humidity_reading.setText(f'{self.flow_humid_read:.2f}')
             self.analyte_reading_lbl.setText(f'{self.analyte_read:.2f}')
+        
+        if self.general_control['VOVG_connection']:
+            self.furnace_temp_reading.setText(f'{self.furnace_temp_read:.2f}')
+            self.sample_flow_reading.setText(f'{self.sample_flow_read:.2f}')
 
     def restart_plot(self):
         self.main_graph.time_data.clear()       
@@ -844,7 +972,9 @@ class Main_Interface(QMainWindow):
         self.main_graph.bme_temp_data.clear()
         self.main_graph.bme_press_data.clear()
         self.main_graph.bme_humid_data.clear()
-        self.main_graph.mics_data.clear()    
+        self.main_graph.mics_data.clear()
+        self.main_graph.VOVG_furnace_data.clear()
+        self.main_graph.VOVG_sample_flow_data.clear()    
 
     def clear_plot(self):
         self.last_point = self.main_graph.time_data[-1]
@@ -856,8 +986,13 @@ class Main_Interface(QMainWindow):
             self.main_graph.bme_temp_data.append(self.main_system.read_flow_temp())
             self.main_graph.bme_press_data.append(self.main_system.read_flow_press())
             self.main_graph.bme_humid_data.append(self.main_system.read_flow_humidity())
-            self.main_graph.mics_data.append(self.main_system.read_MICS5524())    
+            self.main_graph.mics_data.append(self.main_system.read_MICS5524())
 
+        if self.general_control['VOVG_connection']:
+
+            self.furnace_temp_read = float(self.VOVG_instrument.read_furnace_temp())
+            self.sample_flow_read = float(self.VOVG_instrument.read_sample_flow())*10
+    
     def warning_dlg(self, value='not supported yet'):
         self.value = value
         print('not supported yet')
