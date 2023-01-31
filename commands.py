@@ -24,6 +24,14 @@ class System_Commands():
         else:
             self.connection.write(b'<D2L>')
 
+    def exposure_valve(self, command='CLOSE'):
+        self.command = command
+        if self.command == 'OPEN':
+            self.connection.write(b'<D4H>')
+
+        else:
+            self.connection.write(b'<D4L>')
+
     def read_thermocouple_1(self):
         self.connection.write(b'<T1>')
         a = self.connection.readline().decode('ascii')

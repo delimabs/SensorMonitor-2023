@@ -60,17 +60,12 @@ class VOVG_module():
         a = self.sample_flow_controller.read_register(1, 1)
         return float(a)
     
-    def set_furnace_SP1(self, value=25):
+    def set_furnace_temp(self, value=25):
         # write in address 25 the entered value. Default is 25
-        self.value=value
-        self.furnace_controller.write_register(24, self.value, 1)
-
-    def set_furnace_SP2():
-        print('not supported yet')
+        self.furnace_controller.write_register(24, value, 1)
     
-    def set_sample_flow_SP1(self, value=0):
-        self.value=value
-        self.sample_flow_controller.write_register(24, self.value, 1)
+    def set_sample_flow(self, value=0):
+        self.sample_flow_controller.write_register(24, value, 1)
 
     def ieee_754_conversion(n, sgn_len=1, exp_len=8, mant_len=23):
         """

@@ -31,70 +31,19 @@ class DAQ6510():
         reading = self.instrument.query('TRAC:DATA? 1, 1, "defbuffer1", READ')
         return reading
 
-    def read_ch_res(self, slot='1', ch_number='01'):
-        self.ch_str = slot+ch_number
-
-        self.instrument.write('*RST')
-        self.instrument.write('SENSe:FUNCtion "RESistance", (@'+self.ch_str+')')
-        self.instrument.write('ROUTe:CLOSe (@'+self.ch_str+')')
-        self.instrument.write('READ?')
-        return self.instrument.query('TRAC:DATA? 1, 1, "defbuffer1", READ')
-
-    def read_all_ch(self, slot='1', ch_numbers=['01', '02', '11', '12']):
-        self.ch_str_list = '@'
-
-        for index, element in enumerate(ch_numbers):
-            
-            if index < len(ch_numbers)-1:
-                self.ch_str_list = self.ch_str_list+slot+element+', '
-
-            elif index == len(ch_numbers)-1:
-                self.ch_str_list = self.ch_str_list+slot+element
-
-        self.instrument.write('*RST')
-        self.instrument.write('SENSe:FUNCtion "RESistance", ('+self.ch_str_list+')')
-        self.instrument.write('ROUTe:CHANnel:MULTiple:CLOSe ('+self.ch_str_list+')')
-        self.instrument.write('SENSe:COUNt 5')
+    def read_ch_1(self):
+        self.instrument.write(':*RST')
+        self.instrument.write(':SENSe:FUNCtion "RESistance", (@101)')
+        self.instrument.write(':ROUTe:CHANnel:MULTiple:CLOSe (@101)')
+        self.instrument.write(':SENSe:COUNt 5')
         self.instrument.write('TRAC:TRIG')
-        self.instrument.write('ROUTe:SCAN:CREate ('+self.ch_str_list+')')
-        self.instrument.write('INIT')
-        self.instrument.write('*WAI')
-        readings = self.instrument.query(f'TRAC:DATA? 1, {len(ch_numbers)}, "defbuffer1", READ,').split(',')
-        resistance_results = []
-        
-        for element in readings:
-            resistance_results.append(float(element))
-        
-        return resistance_results
+        self.instrument.write(':ROUTe:SCAN:CREate (@101)')
+        self.instrument.write(':INIT')
+        self.instrument.write(':*WAI')
+        results = self.instrument.query(':TRAC:DATA? 1, 1, "defbuffer1", READ,').split(',')
+        return results[0]
 
-    def read_res_cell_1(self, slot='1', ch_numbers=['01', '02']):
-        self.ch_str_list = '@'
-
-        for index, element in enumerate(ch_numbers):
-            
-            if index < len(ch_numbers)-1:
-                self.ch_str_list = self.ch_str_list+slot+element+', '
-
-            elif index == len(ch_numbers)-1:
-                self.ch_str_list = self.ch_str_list+slot+element
-
-        self.instrument.write('*RST')
-        self.instrument.write('SENSe:FUNCtion "RESistance", ('+self.ch_str_list+')')
-        self.instrument.write('ROUTe:CHANnel:MULTiple:CLOSe ('+self.ch_str_list+')')
-        self.instrument.write('SENSe:COUNt 5')
-        self.instrument.write('TRAC:TRIG')
-        self.instrument.write('ROUTe:SCAN:CREate ('+self.ch_str_list+')')
-        self.instrument.write('INIT')
-        self.instrument.write('*WAI')
-        readings = self.instrument.query(f'TRAC:DATA? 1, {len(ch_numbers)}, "defbuffer1", READ,').split(',')
-        resistance_results = []
-        
-        for element in readings:
-            resistance_results.append(float(element))
-        
-        return resistance_results
-
-    def read_res_cell_2(self, slot='1', ch_numbers=['11', '12']):
+    def read_mult_res(self, slot='1', ch_numbers=['01', '02', '11', '12']):
         self.ch_str_list = '@'
 
         for index, element in enumerate(ch_numbers):

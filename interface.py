@@ -7,7 +7,7 @@ from PySide6.QtGui import QFont
 from PySide6.QtWidgets import (QApplication, QMainWindow, QSpacerItem, QWidget, QPushButton,
                                QHBoxLayout, QVBoxLayout, QGridLayout, QFrame, QCheckBox,
                                QLabel, QSpinBox, QDoubleSpinBox, QDialog, QLineEdit, QFileDialog,
-                               QSizePolicy, QDockWidget, QRadioButton)
+                               QSizePolicy, QDockWidget, QRadioButton, QMessageBox, QGroupBox)
 
 from commands import System_Commands
 from VOVGInterface import VOVG_module
@@ -36,11 +36,33 @@ class Main_Interface(QMainWindow):
                                 'VOVG_connection': False, 
                                 'daq6510_connection': False,
                                 'start_stop_control': False, 
-                                'data_logging': False}
-        
-        self.period = 1000
+                                'data_logging': False,
+                                'sequence_running': False}
+
+        self.period = 5000
         self.timer = QtCore.QTimer()
         self.timer.setInterval(self.period)  # in milliseconds
+
+        #Variables for sequence of events:
+        self.step_counter = 1
+
+        """
+            Each step of the sequence will hold four values. 
+            the first value is the wait time in min, 
+            the second value is a boolean  used to turn the valve on/off
+            the third changes the value of the V-OVG sample sample flow, 
+            and the fourth changes the temperature of the V-OVG
+        """ 
+        self.sequence = {'1': [0,False,0,0], '2': [0,False,0,0], '3': [0,False,0,0],
+                         '4': [0,False,0,0], '5': [0,False,0,0], '6': [0,False,0,0], 
+                         '7': [0,False,0,0], '8': [0,False,0,0], '9': [0,False,0,0], 
+                         '10': [0,False,0,0], '11': [0,False,0,0], '12': [0,False,0,0],
+                         '13': [0,False,0,0], '14': [0,False,0,0], '15': [0,False,0,0], 
+                         '16':[0,False,0,0],  '17': [0,False,0,0], '18': [0,False,0,0], 
+                         '19': [0,False,0,0], '20': [0,False,0,0]}
+
+        self.VOVG_furnace_value = 25
+        self.VOVG_sample_flow_value = 20
 
         self.start_main_layout()
         self.start_main_menu()
@@ -60,7 +82,8 @@ class Main_Interface(QMainWindow):
         self.log_action = self.file_menu.addAction('Log data')
         self.log_action.triggered.connect(self.open_log_dlg)
 
-        self.sequence_menu = self.main_menu.addMenu('Sequence')
+        self.sequence_menu = self.main_menu.addAction('Sequence')
+        self.sequence_menu.triggered.connect(self.open_sequence_dlg)
 
         self.settings_menu = self.main_menu.addMenu('Settings')
         self.plot_action = self.settings_menu.addAction('Plot settings')
@@ -400,10 +423,10 @@ class Main_Interface(QMainWindow):
         self.resistance_layout = QGridLayout(self.resistance_monitor_widget)
         self.resistance_layout.addWidget(
             self.resistance_monitor_lbl, 0, 0, 1, 4)
-        self.resistance_layout.addWidget(self.ch1_lbl, 1, 0, 1, 1)
-        self.resistance_layout.addWidget(self.ch1_reading, 1, 1, 1, 1)
-        self.resistance_layout.addWidget(self.ch2_lbl, 2, 0, 1, 1)
-        self.resistance_layout.addWidget(self.ch2_reading, 2, 1, 1, 1)
+        self.resistance_layout.addWidget(self.ch1_lbl, 1, 0, 1, 1, QtCore.Qt.AlignHCenter)
+        self.resistance_layout.addWidget(self.ch1_reading, 1, 1, 1, 1, QtCore.Qt.AlignHCenter)
+        self.resistance_layout.addWidget(self.ch2_lbl, 2, 0, 1, 1, QtCore.Qt.AlignHCenter)
+        self.resistance_layout.addWidget(self.ch2_reading, 2, 1, 1, 1, QtCore.Qt.AlignHCenter)
 
         self.resistance_layout.addItem(QSpacerItem(1, 10), 3, 0, 1, 4)
         self.resistance_layout.addWidget(
@@ -832,11 +855,15 @@ class Main_Interface(QMainWindow):
             self.VOVG_status_lbl.setStyleSheet("background-color: rgb(250, 80, 80);")
 
     def VOVG_set_settings(self):
-        furnace_sp1 = float(self.VOVG_furnace_input.text())
-        sample_flow_sp1 = float(self.VOVG_sample_flow_input.text())/10
-        
-        self.VOVG_instrument.set_furnace_SP1(furnace_sp1)
-        self.VOVG_instrument.set_sample_flow_SP1(sample_flow_sp1)
+        """
+        This routine changes the set point of the OVG furnace and mass flow
+        controller after the dialog box of the OVG settings
+        """
+        furnace_set_point = float(self.VOVG_furnace_input.text())
+        sample_flow_set_point = float(self.VOVG_sample_flow_input.text())/10
+   
+        self.VOVG_instrument.set_furnace_temp(furnace_set_point)
+        self.VOVG_instrument.set_sample_flow(sample_flow_set_point)
 
     ### DAQ6510
     def daq6510_connect(self):
@@ -887,7 +914,7 @@ class Main_Interface(QMainWindow):
 
         else:
             self.time_read = self.main_graph.time_data[-1] + \
-                self.period/1000
+                self.period/60000
 
         self.main_graph.time_data.append(self.time_read)
         
@@ -905,8 +932,8 @@ class Main_Interface(QMainWindow):
             self.main_graph.mics_data.append(self.analyte_read)
      
         if self.general_control['VOVG_connection']:
-            self.furnace_temp_read = float(self.VOVG_instrument.read_furnace_temp())
-            self.sample_flow_read = float(self.VOVG_instrument.read_sample_flow())*10
+            self.furnace_temp_read = self.VOVG_instrument.read_furnace_temp()
+            self.sample_flow_read = self.VOVG_instrument.read_sample_flow()
 
             self.furnace_temp_reading.setText(f'{self.furnace_temp_read:.2f}')
             self.sample_flow_reading.setText(f'{self.sample_flow_read:.2f}')
@@ -915,8 +942,7 @@ class Main_Interface(QMainWindow):
             self.main_graph.VOVG_sample_flow_data.append(self.sample_flow_read)
 
         if self.general_control['daq6510_connection']:
-            self.resistance_read = float(self.multimeter.read_ch_res(slot='1',
-                                                            ch_number='01'))
+            self.resistance_read = float(self.multimeter.read_ch_1())
 
             self.main_graph.resistance_data.append(self.resistance_read)
 
@@ -924,6 +950,9 @@ class Main_Interface(QMainWindow):
         
         if self.general_control['data_logging']:
             self.log_data()
+
+        if self.general_control['sequence_running']:
+            self.run_event()
 
         if len(self.main_graph.time_data) > self.main_graph.limit:
             self.main_graph.time_data.pop(0)
@@ -959,6 +988,239 @@ class Main_Interface(QMainWindow):
         if self.general_control['daq6510_connection']:
             self.ch1_reading.setText(f'{self.resistance_read:.2f}')
 
+    """SEQUENCE OF EVENTS"""
+    def open_sequence_dlg(self):
+        """
+            This function creates the dialog box to define how
+            the experiment will run. The user has the possibility 
+            to choose what events the system will carry out at a 
+            specific time. The possible events are open or close
+            the exposure valve and also to change the set points
+            of sample flow and furnace temperature from V-OVG. 
+        """
+        self.seq_dlg = QDialog()
+        self.seq_dlg.resize(400, 700)
+        self.seq_dlg.setWindowTitle('Define sequence of events')
+
+        #1. Create objects inside a group box
+        self.upper_group_box = QGroupBox(self.seq_dlg)
+        self.upper_group_box.setTitle('Define command: ')
+
+        self.step_lbl = QLabel(self.upper_group_box)
+        self.step_lbl.setText('Step '+f'{self.step_counter}:')
+
+        self.wait_time_lbl = QLabel(self.upper_group_box)
+        self.wait_time_lbl.setText('Wait (min): ')
+
+        self.wait_time_input = QLineEdit(self.upper_group_box)
+        self.wait_time_input.setFixedSize(75, 20)
+
+        self.valve_on_cmd = QRadioButton(self.upper_group_box)
+        self.valve_on_cmd.setText('Open valve')
+
+        self.valve_off_cmd = QRadioButton(self.upper_group_box)
+        self.valve_off_cmd.setText('Close valve')
+        self.valve_off_cmd.setChecked(True)
+        
+        self.VOVG_flow_cmd_lbl = QLabel(self.upper_group_box)
+        self.VOVG_flow_cmd_lbl.setText('Set V-OVG flow (sccm): ')
+        self.VOVG_flow_seq_input = QLineEdit(self.upper_group_box)
+        self.VOVG_flow_seq_input.setPlaceholderText(str(self.VOVG_furnace_value))
+        self.VOVG_flow_seq_input.setFixedSize(75, 20)
+
+        self.VOVG_temp_cmd_lbl = QLabel(self.upper_group_box)
+        self.VOVG_temp_cmd_lbl.setText('Set V-OVG temp (C): ')
+        self.VOVG_temp_seq_input = QLineEdit(self.upper_group_box)
+        self.VOVG_temp_seq_input.setPlaceholderText(str(self.VOVG_sample_flow_value))
+        self.VOVG_temp_seq_input.setFixedSize(75, 20)
+
+        #Layout
+        self.upper_group_box_layout = QGridLayout(self.upper_group_box)
+        self.upper_group_box_layout.addWidget(self.step_lbl, 0, 0, 1, 2)
+        self.upper_group_box_layout.addWidget(self.wait_time_lbl, 1, 0, 1, 1)
+        self.upper_group_box_layout.addWidget(self.wait_time_input, 1, 1, 1, 1)
+        self.upper_group_box_layout.addWidget(self.valve_on_cmd, 2, 0, 1, 2)
+        self.upper_group_box_layout.addWidget(self.valve_off_cmd, 3, 0, 1, 2)
+        self.upper_group_box_layout.addWidget(self.VOVG_flow_cmd_lbl, 4, 0, 1, 1)
+        self.upper_group_box_layout.addWidget(self.VOVG_flow_seq_input, 4, 1, 1, 1)
+        self.upper_group_box_layout.addWidget(self.VOVG_temp_cmd_lbl, 5, 0, 1, 1)
+        self.upper_group_box_layout.addWidget(self.VOVG_temp_seq_input, 5, 1, 1, 1)
+
+        #3. Buttons to add or erase events
+        self.btn_box_seq = QWidget(self.seq_dlg)
+
+        self.add_cmd_btn = QPushButton(self.btn_box_seq)
+        self.add_cmd_btn.setText('Add event')
+        self.add_cmd_btn.clicked.connect(self.add_event)
+
+        self.erase_cmd_btn = QPushButton(self.btn_box_seq)
+        self.erase_cmd_btn.setText('Erase event')
+        self.erase_cmd_btn.clicked.connect(self.erase_event)
+
+        self.btn_box_seq_layout = QVBoxLayout(self.btn_box_seq)
+        self.btn_box_seq_layout.addWidget(self.add_cmd_btn)
+        self.btn_box_seq_layout.addWidget(self.erase_cmd_btn)
+
+        self.seq_lbl = QLabel(self.seq_dlg)
+        self.seq_lbl.setText('Sequence:')
+
+        #4. This box shows the user what is the full sequence
+        self.full_seq_box = QLabel(self.seq_dlg)
+        self.full_seq_box.setLineWidth(2)
+        self.full_seq_box.setFrameStyle(QFrame.Panel | QFrame.Sunken)
+        self.full_seq_box.setAlignment(QtCore.Qt.AlignHCenter)
+        self.full_seq_box.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
+        
+        #5. Buttons to RUN or cancel
+        self.run_seq_btn = QPushButton(self.seq_dlg)
+        self.run_seq_btn.setText('Run')
+        self.run_seq_btn.clicked.connect(self.run_sequence)
+
+        self.cancel_seq_btn = QPushButton(self.seq_dlg)
+        self.cancel_seq_btn.setText('Cancel')
+        self.cancel_seq_btn.clicked.connect(self.seq_dlg.reject)
+
+        self.sequence_str = ''
+        self.list_of_events = []
+
+        self.seq_dlg_main_layout = QGridLayout(self.seq_dlg)
+        self.seq_dlg_main_layout.addWidget(self.upper_group_box, 0, 0, 3, 2, alignment=(QtCore.Qt.AlignTop | QtCore.Qt.AlignCenter))
+        self.seq_dlg_main_layout.addWidget(self.btn_box_seq, 1, 2, 1, 1, alignment=(QtCore.Qt.AlignCenter | QtCore.Qt.AlignCenter))
+        self.seq_dlg_main_layout.addWidget(self.seq_lbl, 3, 0, 1, 3)
+        self.seq_dlg_main_layout.addWidget(self.full_seq_box, 4, 0, 20, 3)
+        self.seq_dlg_main_layout.addWidget(self.run_seq_btn, 24, 1, 1, 1)        
+        self.seq_dlg_main_layout.addWidget(self.cancel_seq_btn, 24, 2, 1, 1)  
+
+        self.seq_dlg.exec()   
+    
+    def add_event(self):
+        """
+            This function defines a event. It changes the values
+            on the sequence dictionary and show the user the commands
+            in the sequence box.
+        """
+        try:
+            if self.step_counter <= 20:
+                wait = float(self.wait_time_input.text())
+
+                if self.valve_on_cmd.isChecked():
+                    valve_open = True
+                elif self.valve_off_cmd.isChecked():
+                    valve_open = False
+
+                VOVG_flow = float(self.VOVG_flow_seq_input.text())
+                VOVG_furnace = float(self.VOVG_temp_seq_input.text())
+
+                if self.step_counter == 1:
+                    self.sequence[f'{self.step_counter}'][0] = wait
+                else:
+                    self.sequence[f'{self.step_counter}'][0] = wait+self.sequence[f'{self.step_counter-1}'][0]
+                
+                self.sequence[f'{self.step_counter}'][1] = valve_open
+                self.sequence[f'{self.step_counter}'][2] = VOVG_flow
+                self.sequence[f'{self.step_counter}'][3] = VOVG_furnace
+
+                if self.valve_on_cmd.isChecked():
+                    seq_str_line = f'Step {self.step_counter}: wait {wait} min, OPEN valve, set Sample Flow to {VOVG_flow} sccm and OVG furnace set to {VOVG_furnace} C\n'
+                
+                elif self.valve_off_cmd.isChecked():
+                    seq_str_line = f'Step {self.step_counter}: wait {wait} min, CLOSE valve, set Sample Flow to {VOVG_flow} sccm and OVG furnace set to {VOVG_furnace} C\n'
+                    
+                self.sequence_str = self.sequence_str+seq_str_line
+
+                self.full_seq_box.setText(self.sequence_str)
+                self.list_of_events.append(seq_str_line)
+
+                self.step_counter  = self.step_counter + 1
+                self.step_lbl.setText('Step '+f'{self.step_counter}:')
+
+            else:
+                self.warning_dlg('Number max of events is 20!')
+        
+        except ValueError:
+            self.warning_dlg('Please, enter all sequence values!')
+        
+    def erase_event(self):
+        """
+            This function deletes the last event defined by the user
+        """
+        
+        self.step_counter  = self.step_counter - 1
+
+        if self.step_counter >= 1:
+
+            self.sequence_str = ''
+
+            self.list_of_events[self.step_counter-1] = ''
+
+            self.sequence[f'{self.step_counter}'][0] = 0
+            self.sequence[f'{self.step_counter}'][1] = False
+            self.sequence[f'{self.step_counter}'][2] = 0
+            self.sequence[f'{self.step_counter}'][3] = 0
+
+        elif self.step_counter == 0:
+            self.warning_dlg('Minimum number of events is 1!')
+            self.step_counter = 1
+
+        for i in range(self.step_counter):
+            self.sequence_str = self.sequence_str + self.list_of_events[i]
+
+        self.full_seq_box.setText('')
+        self.full_seq_box.setText(self.sequence_str)
+    
+    def run_sequence(self):
+        """
+            After defining the sequence of events, the user
+            runs it by restarting the plot (time values start on 0).
+            If the user didn't start the plotting, the system will
+            start the timer and the data.
+        """
+        self.restart_plot()
+        
+        if self.start_stop_btn.text() == 'Start':
+            self.timer.start()
+            self.timer.timeout.connect(self.new_data)  
+            self.start_stop_btn.setText('Stop')
+
+        self.step_counter = 1
+        self.seq_dlg.accept()
+        self.general_control['sequence_running'] = True
+        
+    def run_event(self):
+        """
+            First, this function verifies whether the wait
+            time set by the user is 0 in the actual step. 
+            If it is 0, it stops the time and considers 
+            that the sequence is finished.
+            
+            Then, it compares the actual time reading with
+            the wait time registered in the sequence
+
+            Then it takes action considering the other values in
+            the sequence dictionary. The first one is related to 
+            turning the exposure valve on and off, the second is
+            the V-VOG sample flow  and the last one is related
+            to V-VOG furnace temperature.
+        """
+        if self.sequence[f'{self.step_counter}'][0] == 0:
+
+            self.timer.stop()
+            self.general_control['sequence_running'] = False
+            self.warning_dlg('Sequence complete!')
+
+        elif self.time_read >= self.sequence[f'{self.step_counter}'][0]:
+
+            if self.sequence[f'{self.step_counter}'][1]:
+                self.main_system.exposure_valve(command='OPEN')
+
+            elif not self.sequence[f'{self.step_counter}'][1]:
+                self.main_system.exposure_valve(command='CLOSE')
+               
+            sample_flow_set_point = self.sequence[f'{self.step_counter}'][2]
+            furnace_temp_set_point = self.sequence[f'{self.step_counter}'][3]
+
+            self.step_counter = self.step_counter + 1
+
     def restart_plot(self):
         self.main_graph.time_data.clear()       
         self.main_graph.thermocouple_1_data.clear()
@@ -989,10 +1251,18 @@ class Main_Interface(QMainWindow):
         if self.general_control['daq6510_connection']:
             self.main_graph.resistance_data.append(float(self.multimeter.read_ch_res(slot='1',
                                                             ch_number='01')))
+    
+    def warning_dlg(self, message='Warning!'):
+        """
+            Warning box for error handling.
+        """
+        self.message = message
+        self.warningBox = QMessageBox()
+        self.warningBox.setIcon(QMessageBox.Warning)
+        self.warningBox.setWindowTitle('Warning')
+        self.warningBox.setText(self.message)
+        self.warningBox.exec()
 
-    def warning_dlg(self, value='not supported yet'):
-        self.value = value
-        print('not supported yet')
 
 
 if __name__ == '__main__':
