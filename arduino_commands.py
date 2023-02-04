@@ -2,7 +2,7 @@ import time
 import serial
 
 
-class System_Commands():
+class Arduino_Commands():
     def __init__(self, serial_port='COM5', baud_rate=9600):
         self.connection = serial.Serial(serial_port, baud_rate)
         time.sleep(5)

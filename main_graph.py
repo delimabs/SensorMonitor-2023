@@ -3,7 +3,7 @@ from PySide6 import QtCore
 
 
 class Main_Graph(pg.GraphicsLayoutWidget):
-    def __init__(self, parent=None, limit=1200):
+    def __init__(self, parent=None, limit=3600):
         super().__init__(parent=parent, show=True)
 
         self.parent = parent

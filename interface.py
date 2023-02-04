@@ -1,5 +1,6 @@
 import sys
 import datetime
+import time
 import numpy as np
 import pandas as pd
 from PySide6 import QtCore
@@ -9,7 +10,7 @@ from PySide6.QtWidgets import (QApplication, QMainWindow, QSpacerItem, QWidget, 
                                QLabel, QSpinBox, QDoubleSpinBox, QDialog, QLineEdit, QFileDialog,
                                QSizePolicy, QDockWidget, QRadioButton, QMessageBox, QGroupBox)
 
-from commands import System_Commands
+from arduino_commands import Arduino_Commands
 from VOVGInterface import VOVG_module
 from daq6510 import DAQ6510
 from main_graph import Main_Graph
@@ -39,8 +40,9 @@ class Main_Interface(QMainWindow):
                                 'data_logging': False,
                                 'sequence_running': False}
 
-        self.period = 5000
+        self.period = 1000
         self.timer = QtCore.QTimer()
+        self.timer.timeout.connect(self.new_data)  
         self.timer.setInterval(self.period)  # in milliseconds
 
         #Variables for sequence of events:
@@ -60,9 +62,6 @@ class Main_Interface(QMainWindow):
                          '13': [0,False,0,0], '14': [0,False,0,0], '15': [0,False,0,0], 
                          '16':[0,False,0,0],  '17': [0,False,0,0], '18': [0,False,0,0], 
                          '19': [0,False,0,0], '20': [0,False,0,0]}
-
-        self.VOVG_furnace_value = 25
-        self.VOVG_sample_flow_value = 20
 
         self.start_main_layout()
         self.start_main_menu()
@@ -402,16 +401,16 @@ class Main_Interface(QMainWindow):
         self.ch1_reading = QLabel(self.resistance_monitor_widget)
         self.ch1_reading.setLineWidth(1)
         self.ch1_reading.setFrameStyle(QFrame.Panel | QFrame.Sunken)
-        self.ch1_reading.setAlignment(
-            QtCore.Qt.AlignTop | QtCore.Qt.AlignHCenter)
+        #self.ch1_reading.setAlignment(
+        #    QtCore.Qt.AlignTop | QtCore.Qt.AlignHCenter)
         self.ch1_reading.setFixedWidth(70)
         self.ch1_reading.setText('00000.00')
 
         self.ch2_reading = QLabel(self.resistance_monitor_widget)
         self.ch2_reading.setLineWidth(1)
         self.ch2_reading.setFrameStyle(QFrame.Panel | QFrame.Sunken)
-        self.ch2_reading.setAlignment(
-            QtCore.Qt.AlignTop | QtCore.Qt.AlignHCenter)
+        # self.ch2_reading.setAlignment(
+        #    QtCore.Qt.AlignTop | QtCore.Qt.AlignHCenter)
         self.ch2_reading.setFixedWidth(70)
         self.ch2_reading.setText('00000.00')
 
@@ -530,6 +529,12 @@ class Main_Interface(QMainWindow):
         else:
             self.VOVG_temp_check.setDisabled(False)
             self.VOVG_sample_flow_check.setDisabled(False)
+        
+        if self.general_control['daq6510_connection']:
+            self.ch1_check.setDisabled(False)
+        else:
+            self.ch1_check.setDisabled(True)
+
 
         # objects line 1 under columns
         self.user_lbl = QLabel(self.log_dlg)
@@ -630,7 +635,7 @@ class Main_Interface(QMainWindow):
         self.general_control['data_logging'] = True
 
     def create_first_log_line(self):
-        self.first_line.append('Time_(s)')
+        self.first_line.append('Time_(min)')
 
         if self.flow_temp_check.isChecked():
             self.first_line.append('flow_temp_C')
@@ -665,7 +670,7 @@ class Main_Interface(QMainWindow):
     def log_data(self):
         self.writing_data = open(window.log_file_name, 'a')
 
-        self.writing_data.write(f'{self.time_read:.1f}'+'   ')
+        self.writing_data.write(f'{self.time_read:.3f}'+'   ')
 
         if self.flow_temp_check.isChecked():
             self.writing_data.write(f'{self.flow_temp_read:.3f}'+'  ')
@@ -687,6 +692,9 @@ class Main_Interface(QMainWindow):
 
         if self.VOVG_sample_flow_check.isChecked():
             self.writing_data.write(f'{self.sample_flow_read:.3f}'+'  ')
+        
+        if self.ch1_check.isChecked():
+            self.first_line.append(f'{self.resistance_read:.5f}')
 
         self.writing_data.write('\n')
         self.writing_data.close()
@@ -859,10 +867,10 @@ class Main_Interface(QMainWindow):
         This routine changes the set point of the OVG furnace and mass flow
         controller after the dialog box of the OVG settings
         """
-        furnace_set_point = float(self.VOVG_furnace_input.text())
+        furnace_temp_set_point = float(self.VOVG_furnace_input.text())
         sample_flow_set_point = float(self.VOVG_sample_flow_input.text())/10
-   
-        self.VOVG_instrument.set_furnace_temp(furnace_set_point)
+
+        self.VOVG_instrument.set_furnace_temp(furnace_temp_set_point)
         self.VOVG_instrument.set_sample_flow(sample_flow_set_point)
 
     ### DAQ6510
@@ -884,13 +892,13 @@ class Main_Interface(QMainWindow):
 
         if self.general_control['controller_connection']:
             self.general_control['controller_connection'] = False
-            self.main_system.close()
+            self.arduino.close()
             self.start_stop_btn.setDisabled(True)
             self.controller_status_lbl.setText('OFF')
             self.controller_status_lbl.setStyleSheet("background-color: rgb(250, 80, 80);")
 
         else:
-            self.main_system = System_Commands(serial_port=self.config['address'][0])
+            self.arduino = Arduino_Commands(serial_port=self.config['address'][0])
             self.general_control['controller_connection'] = True
 
             self.start_stop_btn.setDisabled(False)
@@ -901,7 +909,6 @@ class Main_Interface(QMainWindow):
     def start_stop_data(self):
         if self.start_stop_btn.text() == 'Start':
             self.timer.start()
-            self.timer.timeout.connect(self.new_data)  
             self.start_stop_btn.setText('Stop')
 
         elif self.start_stop_btn.text() == 'Stop':
@@ -909,6 +916,7 @@ class Main_Interface(QMainWindow):
             self.timer.stop()
 
     def new_data(self):
+        
         if len(self.main_graph.time_data) == 0:
             self.time_read = 0
 
@@ -919,11 +927,11 @@ class Main_Interface(QMainWindow):
         self.main_graph.time_data.append(self.time_read)
         
         if self.general_control['controller_connection']:
-            self.thermocouple_1_read = self.main_system.read_thermocouple_1()
-            self.flow_temp_read = self.main_system.read_flow_temp()
-            self.flow_press_read = self.main_system.read_flow_press()
-            self.flow_humid_read = self.main_system.read_flow_humidity()
-            self.analyte_read = self.main_system.read_MICS5524()
+            self.thermocouple_1_read = self.arduino.read_thermocouple_1()
+            self.flow_temp_read = self.arduino.read_flow_temp()
+            self.flow_press_read = self.arduino.read_flow_press()/1000
+            self.flow_humid_read = self.arduino.read_flow_humidity()
+            self.analyte_read = self.arduino.read_MICS5524()
 
             self.main_graph.thermocouple_1_data.append(self.thermocouple_1_read)
             self.main_graph.bme_temp_data.append(self.flow_temp_read)
@@ -933,7 +941,9 @@ class Main_Interface(QMainWindow):
      
         if self.general_control['VOVG_connection']:
             self.furnace_temp_read = self.VOVG_instrument.read_furnace_temp()
-            self.sample_flow_read = self.VOVG_instrument.read_sample_flow()
+            time.sleep(0.01)
+            self.sample_flow_read = self.VOVG_instrument.read_sample_flow()*10
+            time.sleep(0.01)
 
             self.furnace_temp_reading.setText(f'{self.furnace_temp_read:.2f}')
             self.sample_flow_reading.setText(f'{self.sample_flow_read:.2f}')
@@ -1002,6 +1012,8 @@ class Main_Interface(QMainWindow):
         self.seq_dlg.resize(400, 700)
         self.seq_dlg.setWindowTitle('Define sequence of events')
 
+        self.step_counter = 1
+
         #1. Create objects inside a group box
         self.upper_group_box = QGroupBox(self.seq_dlg)
         self.upper_group_box.setTitle('Define command: ')
@@ -1025,13 +1037,13 @@ class Main_Interface(QMainWindow):
         self.VOVG_flow_cmd_lbl = QLabel(self.upper_group_box)
         self.VOVG_flow_cmd_lbl.setText('Set V-OVG flow (sccm): ')
         self.VOVG_flow_seq_input = QLineEdit(self.upper_group_box)
-        self.VOVG_flow_seq_input.setPlaceholderText(str(self.VOVG_furnace_value))
+        self.VOVG_flow_seq_input.setPlaceholderText(str(0))
         self.VOVG_flow_seq_input.setFixedSize(75, 20)
 
         self.VOVG_temp_cmd_lbl = QLabel(self.upper_group_box)
         self.VOVG_temp_cmd_lbl.setText('Set V-OVG temp (C): ')
         self.VOVG_temp_seq_input = QLineEdit(self.upper_group_box)
-        self.VOVG_temp_seq_input.setPlaceholderText(str(self.VOVG_sample_flow_value))
+        self.VOVG_temp_seq_input.setPlaceholderText(str(25))
         self.VOVG_temp_seq_input.setFixedSize(75, 20)
 
         #Layout
@@ -1146,7 +1158,8 @@ class Main_Interface(QMainWindow):
         """
         
         self.step_counter  = self.step_counter - 1
-
+        self.step_lbl.setText('Step '+f'{self.step_counter}:')
+        
         if self.step_counter >= 1:
 
             self.sequence_str = ''
@@ -1179,7 +1192,7 @@ class Main_Interface(QMainWindow):
         
         if self.start_stop_btn.text() == 'Start':
             self.timer.start()
-            self.timer.timeout.connect(self.new_data)  
+            # self.timer.timeout.connect(self.new_data)  
             self.start_stop_btn.setText('Stop')
 
         self.step_counter = 1
@@ -1206,19 +1219,26 @@ class Main_Interface(QMainWindow):
 
             self.timer.stop()
             self.general_control['sequence_running'] = False
+            self.start_stop_btn.setText('Start')
             self.warning_dlg('Sequence complete!')
 
         elif self.time_read >= self.sequence[f'{self.step_counter}'][0]:
 
             if self.sequence[f'{self.step_counter}'][1]:
-                self.main_system.exposure_valve(command='OPEN')
+                self.arduino.exposure_valve(command='OPEN')
+                self.arduino.warning_yellow(command='ON')
 
             elif not self.sequence[f'{self.step_counter}'][1]:
-                self.main_system.exposure_valve(command='CLOSE')
+                self.arduino.exposure_valve(command='CLOSE')
+                self.arduino.warning_yellow(command='OFF')
                
-            sample_flow_set_point = self.sequence[f'{self.step_counter}'][2]
-            furnace_temp_set_point = self.sequence[f'{self.step_counter}'][3]
+            sample_flow_set_point = float(self.sequence[f'{self.step_counter}'][2])/10
+            furnace_temp_set_point = float(self.sequence[f'{self.step_counter}'][3])
 
+            self.VOVG_instrument.set_furnace_temp(furnace_temp_set_point)
+            time.sleep(0.005)
+            self.VOVG_instrument.set_sample_flow(sample_flow_set_point)
+            time.sleep(0.005)
             self.step_counter = self.step_counter + 1
 
     def restart_plot(self):
@@ -1238,11 +1258,11 @@ class Main_Interface(QMainWindow):
         self.main_graph.time_data.append(self.last_point)
         
         if self.general_control['controller_connection']:
-            self.main_graph.thermocouple_1_data.append(self.main_system.read_thermocouple_1())
-            self.main_graph.bme_temp_data.append(self.main_system.read_flow_temp())
-            self.main_graph.bme_press_data.append(self.main_system.read_flow_press())
-            self.main_graph.bme_humid_data.append(self.main_system.read_flow_humidity())
-            self.main_graph.mics_data.append(self.main_system.read_MICS5524())
+            self.main_graph.thermocouple_1_data.append(self.arduino.read_thermocouple_1())
+            self.main_graph.bme_temp_data.append(self.arduino.read_flow_temp())
+            self.main_graph.bme_press_data.append(self.arduino.read_flow_press())
+            self.main_graph.bme_humid_data.append(self.arduino.read_flow_humidity())
+            self.main_graph.mics_data.append(self.arduino.read_MICS5524())
 
         if self.general_control['VOVG_connection']:
             self.main_graph.VOVG_furnace_data.append(float(self.VOVG_instrument.read_furnace_temp()))
