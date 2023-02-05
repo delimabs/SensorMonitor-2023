@@ -25,7 +25,7 @@ class Main_Interface(QMainWindow):
         
         super().__init__()
         self.config = pd.read_csv('configurations.txt', sep=',')
-        print(self.config['address'][0])
+        # print(self.config['address'][0])
         
         self.setGeometry(50, 50, 1200, 600)
         self.setWindowTitle('Sensor Monitor 0.9d')
@@ -40,7 +40,7 @@ class Main_Interface(QMainWindow):
                                 'data_logging': False,
                                 'sequence_running': False}
 
-        self.period = 1000
+        self.period = 5000
         self.timer = QtCore.QTimer()
         self.timer.timeout.connect(self.new_data)  
         self.timer.setInterval(self.period)  # in milliseconds
@@ -670,22 +670,22 @@ class Main_Interface(QMainWindow):
     def log_data(self):
         self.writing_data = open(window.log_file_name, 'a')
 
-        self.writing_data.write(f'{self.time_read:.3f}'+'   ')
+        self.writing_data.write(f'{self.time_read:.4f}'+'   ')
 
         if self.flow_temp_check.isChecked():
-            self.writing_data.write(f'{self.flow_temp_read:.3f}'+'  ')
+            self.writing_data.write(f'{self.flow_temp_read:.2f}'+'  ')
         
         if self.flow_press_check.isChecked():
-            self.writing_data.write(f'{self.flow_press_read:.3f}'+'  ')
+            self.writing_data.write(f'{self.flow_press_read:.2f}'+'  ')
 
         if self.flow_humid_check.isChecked():
-            self.writing_data.write(f'{self.flow_humid_read:.3f}'+'  ')
+            self.writing_data.write(f'{self.flow_humid_read:.2f}'+'  ')
 
         if self.MICS5524_check.isChecked():
-            self.writing_data.write(f'{self.analyte_read:.3f}'+'  ')
+            self.writing_data.write(f'{self.analyte_read:.2f}'+'  ')
 
         if self.thermo_1_check.isChecked():
-            self.writing_data.write(f'{self.thermocouple_1_read:.3f}'+'  ')
+            self.writing_data.write(f'{self.thermocouple_1_read:.2f}'+'  ')
         
         if self.VOVG_temp_check.isChecked():
             self.writing_data.write(f'{self.furnace_temp_read:.3f}'+'  ')
@@ -996,7 +996,7 @@ class Main_Interface(QMainWindow):
             self.sample_flow_reading.setText(f'{self.sample_flow_read:.2f}')
         
         if self.general_control['daq6510_connection']:
-            self.ch1_reading.setText(f'{self.resistance_read:.2f}')
+            self.ch1_reading.setText(f'{self.resistance_read:.3f}')
 
     """SEQUENCE OF EVENTS"""
     def open_sequence_dlg(self):
@@ -1236,9 +1236,9 @@ class Main_Interface(QMainWindow):
             furnace_temp_set_point = float(self.sequence[f'{self.step_counter}'][3])
 
             self.VOVG_instrument.set_furnace_temp(furnace_temp_set_point)
-            time.sleep(0.005)
+            time.sleep(0.01)
             self.VOVG_instrument.set_sample_flow(sample_flow_set_point)
-            time.sleep(0.005)
+            time.sleep(0.01)
             self.step_counter = self.step_counter + 1
 
     def restart_plot(self):
