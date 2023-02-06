@@ -1,4 +1,4 @@
 instrument,address
-control_addr,COM5
-VOVG_addr,COM6
+control_addr,COM7
+VOVG_addr,COM5
 daq6510,COM9
