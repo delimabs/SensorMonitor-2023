@@ -694,7 +694,8 @@ class Main_Interface(QMainWindow):
             self.writing_data.write(f'{self.sample_flow_read:.3f}'+'  ')
         
         if self.ch1_check.isChecked():
-            self.first_line.append(f'{self.resistance_read:.5f}')
+            self.writing_data.write(f'{self.resistance_read:.5f}')
+
 
         self.writing_data.write('\n')
         self.writing_data.close()
