@@ -101,9 +101,9 @@ class Main_Interface(QMainWindow):
     ### Main Layout
     def start_main_layout(self):
         """
-        This function creates the main layout of the GUI. #1 It defines the main graph
-        as the central widget and a #2 dock layout with buttons and display areas for 
-        each parameter being monitored. 
+            This function creates the main layout of the GUI. #1 It defines the main graph
+            as the central widget and a #2 dock layout with buttons and display areas for 
+            each parameter being monitored. 
         """
 
         self.setWindowTitle('Thermocouple monitor 0.9d')
@@ -133,7 +133,7 @@ class Main_Interface(QMainWindow):
         #3 Dock menu widgets and separating lines
         #
         self.connect_board_widget = QWidget(self.dock_menu)
-        self.connect_board_widget.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Maximum)
+        #self.connect_board_widget.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Maximum)
 
         self.probe_temp_monitor_widget = QWidget(self.dock_menu)
         self.flow_info_widget = QWidget(self.dock_menu)
@@ -162,7 +162,7 @@ class Main_Interface(QMainWindow):
         self.line6.setLineWidth(2)  
 
         self.dock_layout =  QHBoxLayout(self.dock_menu)
-        self.dock_layout.addWidget(self.connect_board_widget, alignment=QtCore.Qt.Alignment(QtCore.Qt.AlignCenter))
+        self.dock_layout.addWidget(self.connect_board_widget)
 
         self.dock_layout.addWidget(self.line1)
         self.dock_layout.addWidget(self.probe_temp_monitor_widget)
@@ -177,19 +177,19 @@ class Main_Interface(QMainWindow):
         self.dock_layout.addWidget(self.line6)
         self.dock_layout.addWidget(self.commands_widget)
 
-        self.spacer_1 = QSpacerItem(0,0, hData = QSizePolicy.Minimum, vData = QSizePolicy.Expanding)
-        self.dock_layout.addSpacerItem(self.spacer_1)
+        # self.spacer_1 = QSpacerItem(0,0, hData = QSizePolicy.Minimum, vData = QSizePolicy.Expanding)
+        # self.dock_layout.addSpacerItem(self.spacer_1)
 
     ### Dock menu objects
     def start_connection_board(self):
         """
-        This board contains four buttons that should run the communication
-        procedure to interface with the arduino board, the OVG furnace,
-        and the multichannel Keithley multimeter; 
+            This board contains three buttons that should run the communication
+            procedure to interface the PC with the arduino board, the OVG furnace,
+            and the multichannel Keithley multimeter; 
         """
 
         self.connect_lbl = QLabel(self.connect_board_widget)
-        self.connect_lbl.setText('Instruments')
+        self.connect_lbl.setText('INSTRUMENTS')
         self.connect_lbl.setFont(self.title_font)
         self.connect_lbl.setAlignment( QtCore.Qt.AlignTop | QtCore.Qt.AlignHCenter)
         
@@ -200,7 +200,7 @@ class Main_Interface(QMainWindow):
         self.controller_status_lbl = QLabel(self.connect_board_widget)
         self.controller_status_lbl.setText('OFF')
         self.controller_status_lbl.setFixedSize(65, 20)
-        self.controller_status_lbl.setAlignment(QtCore.Qt.AlignTop | QtCore.Qt.AlignCenter)
+        self.controller_status_lbl.setAlignment(QtCore.Qt.AlignCenter)
         self.controller_status_lbl.setStyleSheet("background-color: rgb(250, 80, 80);")
         
         self.VOVG_connect_btn = QPushButton(self.connect_board_widget)
@@ -210,7 +210,7 @@ class Main_Interface(QMainWindow):
         self.VOVG_status_lbl = QLabel(self.connect_board_widget)
         self.VOVG_status_lbl.setText('OFF')
         self.VOVG_status_lbl.setFixedSize(65, 20)
-        self.VOVG_status_lbl.setAlignment(QtCore.Qt.AlignTop | QtCore.Qt.AlignCenter)
+        self.VOVG_status_lbl.setAlignment(QtCore.Qt.AlignCenter)
         self.VOVG_status_lbl.setStyleSheet("background-color: rgb(250, 80, 80);")
 
         self.start_daq_btn = QPushButton(self.connect_board_widget)
@@ -220,64 +220,122 @@ class Main_Interface(QMainWindow):
         self.status_daq_lbl = QLabel(self.connect_board_widget)
         self.status_daq_lbl.setText('OFF')
         self.status_daq_lbl.setFixedSize(65, 20)
-        self.status_daq_lbl.setAlignment(QtCore.Qt.AlignTop | QtCore.Qt.AlignCenter)
+        self.status_daq_lbl.setAlignment(QtCore.Qt.AlignCenter)
         self.status_daq_lbl.setStyleSheet("background-color: rgb(250, 80, 80);")
 
         # Layout
         self.connection_board_layout = QGridLayout(self.connect_board_widget)
         self.connection_board_layout.addWidget(self.connect_lbl, 0, 0, 1, 2)
-        self.connection_board_layout.addWidget(self.controller_connect_btn, 1, 0, 1, 1)
-        self.connection_board_layout.addWidget(self.controller_status_lbl, 1, 1, 1, 1)
-        self.connection_board_layout.addWidget(self.VOVG_connect_btn, 2, 0, 1, 1)
-        self.connection_board_layout.addWidget(self.VOVG_status_lbl, 2, 1, 1, 1)
-        self.connection_board_layout.addWidget(self.start_daq_btn, 3, 0, 1, 1)
-        self.connection_board_layout.addWidget(self.status_daq_lbl, 3, 1, 1, 1)
+        self.connection_board_layout.addItem(QSpacerItem(1, 20), 1, 0, 1, 2)
+        self.connection_board_layout.addWidget(self.controller_connect_btn, 2, 0, 1, 1)
+        self.connection_board_layout.addWidget(self.controller_status_lbl, 2, 1, 1, 1)
+        self.connection_board_layout.addWidget(self.VOVG_connect_btn, 3, 0, 1, 1)
+        self.connection_board_layout.addWidget(self.VOVG_status_lbl, 3, 1, 1, 1)
+        self.connection_board_layout.addWidget(self.start_daq_btn, 4, 0, 1, 1)
+        self.connection_board_layout.addWidget(self.status_daq_lbl, 4, 1, 1, 1)
 
     def start_op_temp_monitor(self):
+        """
+            This function creates the visual objects related to the sensor
+            operating temperature. It reads the thermocouple from arduino
+            connected through SPI with a MAX 6675 chip.
+
+            For the moment thermocouple 2 is not active.
+        """
+
         self.op_temp_monitor_lbl = QLabel(self.probe_temp_monitor_widget)
-        self.op_temp_monitor_lbl.setText('Flow Info')
+        self.op_temp_monitor_lbl.setText('OPERATING TEMP.')
         self.op_temp_monitor_lbl.setFont(self.title_font)
         self.op_temp_monitor_lbl.setAlignment(QtCore.Qt.AlignTop | QtCore.Qt.AlignHCenter)
 
         self.temp_cell_1_lbl = QLabel(self.probe_temp_monitor_widget)
-        self.temp_cell_1_lbl.setText('Thermocouple 1:')
+        self.temp_cell_1_lbl.setText('Thermocouple 1: ')
         self.temp_cell_1_lbl.setAlignment(QtCore.Qt.AlignHCenter)
 
         self.temp_cell_1_reading = QLabel(self.probe_temp_monitor_widget)
-        self.temp_cell_1_reading.setLineWidth(1)
+        self.temp_cell_1_reading.setLineWidth(2)
         self.temp_cell_1_reading.setFrameStyle(QFrame.Panel | QFrame.Sunken)
         self.temp_cell_1_reading.setAlignment(QtCore.Qt.AlignHCenter)
         self.temp_cell_1_reading.setFixedWidth(60)
         self.temp_cell_1_reading.setText('000.00')
 
         self.temp_cell_2_lbl = QLabel(self.probe_temp_monitor_widget)
-        self.temp_cell_2_lbl.setText('Thermocouple 2:')
-        self.temp_cell_2_lbl.setAlignment(QtCore.Qt.AlignHCenter)
+        self.temp_cell_2_lbl.setText('Thermocouple 2: ')
+        self.temp_cell_2_lbl.setAlignment(QtCore.Qt.AlignVCenter | QtCore.Qt.AlignHCenter)
 
-        self.ing = QLabel(self.probe_temp_monitor_widget)
-        self.ing.setLineWidth(1)
-        self.ing.setFrameStyle(QFrame.Panel | QFrame.Sunken)
-        self.ing.setAlignment(QtCore.Qt.AlignHCenter)
-        self.ing.setFixedWidth(60)
-        self.ing.setText('000.00')
+        self.temp_cell_2_reading = QLabel(self.probe_temp_monitor_widget)
+        self.temp_cell_2_reading.setLineWidth(2)
+        self.temp_cell_2_reading.setFrameStyle(QFrame.Panel | QFrame.Sunken)
+        self.temp_cell_2_reading.setAlignment(QtCore.Qt.AlignVCenter | QtCore.Qt.AlignHCenter)
+        self.temp_cell_2_reading.setFixedWidth(60)
+        self.temp_cell_2_reading.setText('000.00')
 
         self.probe_temp_show_btn = QPushButton(self.probe_temp_monitor_widget)
         self.probe_temp_show_btn.setText('Show')
         self.probe_temp_show_btn.clicked.connect(self.main_graph.add_thermo_1)
 
         self.probe_temp_layout = QGridLayout(self.probe_temp_monitor_widget)
-        self.probe_temp_layout.addWidget(self.op_temp_monitor_lbl, 0, 0, 1, 1)
+        self.probe_temp_layout.addWidget(self.op_temp_monitor_lbl, 0, 0, 1, 2)
         self.probe_temp_layout.addWidget(self.temp_cell_1_lbl, 1, 0, 1, 1)
         self.probe_temp_layout.addWidget(self.temp_cell_1_reading, 1, 1, 1, 1)
         self.probe_temp_layout.addWidget(self.temp_cell_2_lbl, 2, 0, 1, 1)
-        self.probe_temp_layout.addWidget(self.ing, 2, 1, 1, 1)
+        self.probe_temp_layout.addWidget(self.temp_cell_2_reading, 2, 1, 1, 1)
         self.probe_temp_layout.addItem(QSpacerItem(1, 20), 3, 0, 1, 2)
         self.probe_temp_layout.addWidget(
             self.probe_temp_show_btn, 4, 0, 1, 2, QtCore.Qt.AlignBottom | QtCore.Qt.AlignHCenter)
 
+    def start_VOVG_monitor(self):
+        """
+            This function creates the visual objects for monitoring the 
+            V-OVG furnace temperature and gas sample flow in standard 
+            cubic centimeters
+        """
+
+        self.VOVG_Lbl = QLabel(self.VOVG_monitor_widget)
+        self.VOVG_Lbl.setText('V-OVG')
+        self.VOVG_Lbl.setFont(self.title_font)
+        self.VOVG_Lbl.setAlignment(
+            QtCore.Qt.AlignTop | QtCore.Qt.AlignHCenter)
+
+        self.furnace_temp_lbl = QLabel(self.VOVG_monitor_widget)
+        self.furnace_temp_lbl.setText('Furnace temp (C): ')
+
+        self.sample_flow_lbl = QLabel(self.VOVG_monitor_widget)
+        self.sample_flow_lbl.setText('Sample flow (sccm): ')
+
+        self.furnace_temp_reading = QLabel(self.VOVG_monitor_widget)
+        self.furnace_temp_reading.setLineWidth(2)
+        self.furnace_temp_reading.setFrameStyle(QFrame.Panel | QFrame.Sunken)
+        self.furnace_temp_reading.setAlignment(QtCore.Qt.AlignHCenter)
+        self.furnace_temp_reading.setFixedWidth(60)
+        self.furnace_temp_reading.setText('000.00')
+
+        self.sample_flow_reading = QLabel(self.VOVG_monitor_widget)
+        self.sample_flow_reading.setLineWidth(2)
+        self.sample_flow_reading.setFrameStyle(QFrame.Panel | QFrame.Sunken)
+        self.sample_flow_reading.setAlignment(QtCore.Qt.AlignHCenter)
+        self.sample_flow_reading.setFixedWidth(60)
+        self.sample_flow_reading.setText('000.00')
+
+        self.VOVG_show_btn = QPushButton(self.VOVG_monitor_widget)
+        self.VOVG_show_btn.setText('Show')
+        self.VOVG_show_btn.clicked.connect(self.main_graph.add_VOVG)
+        self.VOVG_show_btn.setDisabled(True)
+        
+        # Layout GridBox
+        self.VOVG_board_layout = QGridLayout(self.VOVG_monitor_widget)
+        self.VOVG_board_layout.addWidget(self.VOVG_Lbl, 0, 0, 1, 2)
+        self.VOVG_board_layout.addWidget(self.furnace_temp_lbl, 1, 0, 1, 1)
+        self.VOVG_board_layout.addWidget(self.furnace_temp_reading, 1, 1, 1, 1)
+        self.VOVG_board_layout.addWidget(self.sample_flow_lbl, 2, 0, 1, 1)
+        self.VOVG_board_layout.addWidget(self.sample_flow_reading, 2, 1, 1, 1)
+        self.VOVG_board_layout.addItem(QSpacerItem(1, 20), 3, 0, 1, 2)
+        self.VOVG_board_layout.addWidget(self.VOVG_show_btn, 4, 0, 1, 2,
+                                         QtCore.Qt.AlignBottom | QtCore.Qt.AlignHCenter)
+
     def start_flow_info_monitor(self):
         self.flow_info_lbl = QLabel(self.flow_info_widget)
-        self.flow_info_lbl.setText('Flow Info')
+        self.flow_info_lbl.setText('FLOW INFO')
         self.flow_info_lbl.setFont(self.title_font)
         self.flow_info_lbl.setAlignment(QtCore.Qt.AlignTop | QtCore.Qt.AlignHCenter)
 
@@ -292,21 +350,21 @@ class Main_Interface(QMainWindow):
         self.flow_humidity_opt.setText('Humidity, % : ')
 
         self.flow_temp_reading = QLabel(self.flow_info_widget)
-        self.flow_temp_reading.setLineWidth(1)
+        self.flow_temp_reading.setLineWidth(2)
         self.flow_temp_reading.setFrameStyle(QFrame.Panel | QFrame.Sunken)
         self.flow_temp_reading.setAlignment(QtCore.Qt.AlignHCenter)
         self.flow_temp_reading.setFixedWidth(60)
         self.flow_temp_reading.setText('00.00')
 
         self.flow_press_reading = QLabel(self.flow_info_widget)
-        self.flow_press_reading.setLineWidth(1)
+        self.flow_press_reading.setLineWidth(2)
         self.flow_press_reading.setFrameStyle(QFrame.Panel | QFrame.Sunken)
         self.flow_press_reading.setAlignment(QtCore.Qt.AlignHCenter)
         self.flow_press_reading.setFixedWidth(60)
         self.flow_press_reading.setText('00.00')
 
         self.flow_humidity_reading = QLabel(self.flow_info_widget)
-        self.flow_humidity_reading.setLineWidth(1)
+        self.flow_humidity_reading.setLineWidth(2)
         self.flow_humidity_reading.setFrameStyle(QFrame.Panel | QFrame.Sunken)
         self.flow_humidity_reading.setAlignment(QtCore.Qt.AlignHCenter)
         self.flow_humidity_reading.setFixedWidth(60)
@@ -326,54 +384,6 @@ class Main_Interface(QMainWindow):
         self.flow_info_layout.addWidget(self.flow_humidity_reading, 3, 1, 1, 1)
         self.flow_info_layout.addWidget(self.flow_info_show_btn, 4, 0, 1, 2, QtCore.Qt.AlignBottom | QtCore.Qt.AlignHCenter)
 
-    def start_VOVG_monitor(self):
-        """
-        Create the OVG interface with real-time temperature and sample flow monitoring;
-        """
-
-        self.VOVG_Lbl = QLabel(self.VOVG_monitor_widget)
-        self.VOVG_Lbl.setText('OVG Monitor')
-        self.VOVG_Lbl.setFont(self.title_font)
-        self.VOVG_Lbl.setAlignment(
-            QtCore.Qt.AlignTop | QtCore.Qt.AlignHCenter)
-
-        self.furnace_temp_opt = QRadioButton(self.VOVG_monitor_widget)
-        self.furnace_temp_opt.setText('Furnace temp (C) :')
-        self.furnace_temp_opt.setChecked(True)
-
-        self.sample_flow_opt = QRadioButton(self.VOVG_monitor_widget)
-        self.sample_flow_opt.setText('Sample flow (sccm):')
-
-        self.furnace_temp_reading = QLabel(self.VOVG_monitor_widget)
-        self.furnace_temp_reading.setLineWidth(1)
-        self.furnace_temp_reading.setFrameStyle(QFrame.Panel | QFrame.Sunken)
-        self.furnace_temp_reading.setAlignment(QtCore.Qt.AlignHCenter)
-        self.furnace_temp_reading.setFixedWidth(60)
-        self.furnace_temp_reading.setText('000.00')
-
-        self.sample_flow_reading = QLabel(self.VOVG_monitor_widget)
-        self.sample_flow_reading.setLineWidth(1)
-        self.sample_flow_reading.setFrameStyle(QFrame.Panel | QFrame.Sunken)
-        self.sample_flow_reading.setAlignment(QtCore.Qt.AlignHCenter)
-        self.sample_flow_reading.setFixedWidth(60)
-        self.sample_flow_reading.setText('000.00')
-
-        self.VOVG_show_btn = QPushButton(self.VOVG_monitor_widget)
-        self.VOVG_show_btn.setText('Show')
-        self.VOVG_show_btn.clicked.connect(self.main_graph.add_VOVG)
-        self.VOVG_show_btn.setDisabled(True)
-        
-        # Layout GridBox
-        self.VOVG_board_layout = QGridLayout(self.VOVG_monitor_widget)
-        self.VOVG_board_layout.addWidget(self.VOVG_Lbl, 0, 0, 1, 2)
-        self.VOVG_board_layout.addWidget(self.furnace_temp_opt, 1, 0, 1, 1)
-        self.VOVG_board_layout.addWidget(self.furnace_temp_reading, 1, 1, 1, 1)
-        self.VOVG_board_layout.addWidget(self.sample_flow_opt, 2, 0, 1, 1)
-        self.VOVG_board_layout.addWidget(
-            self.sample_flow_reading, 2, 1, 1, 1)
-        self.VOVG_board_layout.addWidget(self.VOVG_show_btn, 3, 0, 1, 2,
-                                         QtCore.Qt.AlignBottom | QtCore.Qt.AlignHCenter)
-
     def show_bme(self):
         if self.flow_temp_opt.isChecked():
             self.main_graph.add_BME_temp()
@@ -385,64 +395,62 @@ class Main_Interface(QMainWindow):
             self.main_graph.add_BME_humid()
 
     def start_resistance_monitor(self):
+        
         self.resistance_monitor_lbl = QLabel(self.resistance_monitor_widget)
-        self.resistance_monitor_lbl.setText('Resistance Monitor')
+        self.resistance_monitor_lbl.setText('RESISTANCE MONITOR')
         self.resistance_monitor_lbl.setFont(self.title_font)
         self.resistance_monitor_lbl.setAlignment(
             QtCore.Qt.AlignTop | QtCore.Qt.AlignHCenter)
 
         self.ch1_lbl = QLabel(self.resistance_monitor_widget)
-        self.ch1_lbl.setText('ch01:')
+        self.ch1_lbl.setText('Channel 1:')
 
         self.ch2_lbl = QLabel(self.resistance_monitor_widget)
-        self.ch2_lbl.setText('ch02:')
-
+        self.ch2_lbl.setText('Channel 2: ')
 
         self.ch1_reading = QLabel(self.resistance_monitor_widget)
-        self.ch1_reading.setLineWidth(1)
+        self.ch1_reading.setLineWidth(2)
         self.ch1_reading.setFrameStyle(QFrame.Panel | QFrame.Sunken)
-        #self.ch1_reading.setAlignment(
-        #    QtCore.Qt.AlignTop | QtCore.Qt.AlignHCenter)
+        self.ch1_reading.setAlignment(QtCore.Qt.AlignHCenter)
         self.ch1_reading.setFixedWidth(70)
-        self.ch1_reading.setText('00000.00')
+        self.ch1_reading.setText('000.00')
 
         self.ch2_reading = QLabel(self.resistance_monitor_widget)
-        self.ch2_reading.setLineWidth(1)
+        self.ch2_reading.setLineWidth(2)
         self.ch2_reading.setFrameStyle(QFrame.Panel | QFrame.Sunken)
-        # self.ch2_reading.setAlignment(
-        #    QtCore.Qt.AlignTop | QtCore.Qt.AlignHCenter)
+        self.ch2_reading.setAlignment(QtCore.Qt.AlignHCenter)
         self.ch2_reading.setFixedWidth(70)
-        self.ch2_reading.setText('00000.00')
+        self.ch2_reading.setText('000.00')
 
-        self.resistance_monitor_show_btn = QPushButton(
-            self.resistance_monitor_widget)
+        self.resistance_monitor_show_btn = QPushButton(self.resistance_monitor_widget)
         self.resistance_monitor_show_btn.setText('Show')
         self.resistance_monitor_show_btn.clicked.connect(self.main_graph.add_resistance)
-
+        
+        # Layout GridBox
         self.resistance_layout = QGridLayout(self.resistance_monitor_widget)
-        self.resistance_layout.addWidget(
-            self.resistance_monitor_lbl, 0, 0, 1, 4)
-        self.resistance_layout.addWidget(self.ch1_lbl, 1, 0, 1, 1, QtCore.Qt.AlignHCenter)
-        self.resistance_layout.addWidget(self.ch1_reading, 1, 1, 1, 1, QtCore.Qt.AlignHCenter)
-        self.resistance_layout.addWidget(self.ch2_lbl, 2, 0, 1, 1, QtCore.Qt.AlignHCenter)
-        self.resistance_layout.addWidget(self.ch2_reading, 2, 1, 1, 1, QtCore.Qt.AlignHCenter)
+        self.resistance_layout.addWidget(self.resistance_monitor_lbl, 0, 0, 1, 2)
+        self.resistance_layout.addWidget(self.ch1_lbl, 1, 0, 1, 1)
+        self.resistance_layout.addWidget(self.ch1_reading, 1, 1, 1, 1)
+        self.resistance_layout.addWidget(self.ch2_lbl, 2, 0, 1, 1)
+        self.resistance_layout.addWidget(self.ch2_reading, 2, 1, 1, 1)
+        self.resistance_layout.addItem(QSpacerItem(1, 20), 3, 0, 1, 2)
+        self.resistance_layout.addWidget(self.resistance_monitor_show_btn, 4, 0, 1, 2,
+                                         QtCore.Qt.AlignBottom | QtCore.Qt.AlignHCenter)
 
-        self.resistance_layout.addItem(QSpacerItem(1, 10), 3, 0, 1, 4)
-        self.resistance_layout.addWidget(
-            self.resistance_monitor_show_btn, 4, 0, 1, 4, QtCore.Qt.AlignBottom | QtCore.Qt.AlignHCenter)
+
 
     def start_analyte_monitor(self):
         self.analyte_monitor_lbl = QLabel(self.analyte_monitor_widget)
-        self.analyte_monitor_lbl.setText('Analyte Monitor')
+        self.analyte_monitor_lbl.setText('ANALYTE MONITOR')
         self.analyte_monitor_lbl.setFont(self.title_font)
         self.analyte_monitor_lbl.setAlignment(
             QtCore.Qt.AlignTop | QtCore.Qt.AlignHCenter)
 
         self.analyte_unit_lbl = QLabel(self.analyte_monitor_widget)
-        self.analyte_unit_lbl.setText('Analyte Conc., ppm')
+        self.analyte_unit_lbl.setText('MICS 5524')
 
         self.analyte_reading_lbl = QLabel(self.analyte_monitor_widget)
-        self.analyte_reading_lbl.setLineWidth(1)
+        self.analyte_reading_lbl.setLineWidth(2)
         self.analyte_reading_lbl.setFrameStyle(QFrame.Panel | QFrame.Sunken)
         self.analyte_reading_lbl.setFixedWidth(70)
         self.analyte_reading_lbl.setAlignment(
