@@ -74,10 +74,10 @@ class Main_Graph(pg.GraphicsLayoutWidget):
         self.thermocouple_1_plotItem = self.thermocouple_1_fig.plot([],
                                                                 [],
                                                                 pen=pg.mkPen(color=(255, 130, 130),
-                                                                         width=1,
+                                                                         width=2,
                                                                          style=QtCore.Qt.DashLine),
                                                                 symbolBrush=(255, 130, 130),
-                                                                symbolSize=5,
+                                                                symbolSize=7,
                                                                 symbol='o')
 
     def add_BME_temp(self):
@@ -95,10 +95,10 @@ class Main_Graph(pg.GraphicsLayoutWidget):
         self.bme_temp_plotItem = self.bme_temp_fig.plot([],
                                                         [],
                                                         pen=pg.mkPen(color=(255, 130, 130),
-                                                                    width=1,
+                                                                    width=2,
                                                                     style=QtCore.Qt.DashLine),
                                                             symbolBrush=(255, 130, 130),
-                                                            symbolSize=5,
+                                                            symbolSize=7,
                                                             symbol='o')
 
     def add_BME_press(self):
@@ -116,10 +116,10 @@ class Main_Graph(pg.GraphicsLayoutWidget):
         self.bme_press_plotItem = self.bme_press_fig.plot([],
                                                         [],
                                                         pen=pg.mkPen(color=(130, 255, 130),
-                                                                    width=1,
+                                                                    width=2,
                                                                     style=QtCore.Qt.DashLine),
                                                             symbolBrush=(130, 255, 130),
-                                                            symbolSize=5,
+                                                            symbolSize=7,
                                                            symbol='o')
 
     def add_BME_humid(self):
@@ -137,10 +137,10 @@ class Main_Graph(pg.GraphicsLayoutWidget):
         self.bme_humid_plotItem = self.bme_humid_fig.plot([],
                                                         [],
                                                         pen=pg.mkPen(color=(130, 130, 255),
-                                                                    width=1,
+                                                                    width=2,
                                                                     style=QtCore.Qt.DashLine),
                                                             symbolBrush=(130, 130, 255),
-                                                            symbolSize=5,
+                                                            symbolSize=7,
                                                             symbol='o')
 
     def add_MICS5524(self):
@@ -158,7 +158,7 @@ class Main_Graph(pg.GraphicsLayoutWidget):
         self.mics_plotItem = self.mics_fig.plot([],
                                                 [],
                                                 pen=pg.mkPen(color=(0, 0, 0),
-                                                            width=1,
+                                                            width=2,
                                                             style=QtCore.Qt.DashLine),
                                                 symbolBrush=(0, 0, 0),
                                                 symbolSize=7,
@@ -182,21 +182,21 @@ class Main_Graph(pg.GraphicsLayoutWidget):
         self.VOVG_furnace_plotItem = self.VOVG_furnace_fig.plot([],
                                                           [],
                                                           pen=pg.mkPen(color=(0, 0, 0),
-                                                                       width=1,
+                                                                       width=2,
                                                                        style=QtCore.Qt.DashLine),
                                                           symbolBrush=(
                                                               0, 0, 0),
-                                                          symbolSize=5,
+                                                          symbolSize=7,
                                                           symbol='o')
 
         self.VOVG_sample_flow_plotItem = self.VOVG_sample_flow_fig.plot([],
                                                           [],
                                                           pen=pg.mkPen(color=(0, 0, 0),
-                                                                       width=1,
+                                                                       width=2,
                                                                        style=QtCore.Qt.DashLine),
                                                           symbolBrush=(
                                                               0, 0, 0),
-                                                          symbolSize=5,
+                                                          symbolSize=7,
                                                           symbol='o')
 
     def add_resistance(self):
@@ -214,10 +214,10 @@ class Main_Graph(pg.GraphicsLayoutWidget):
         self.ch1_plot_item = self.ch1_plot.plot([],
                                                         [],
                                                          pen=pg.mkPen(color=(0, 0, 0),
-                                                                     width=1,
+                                                                     width=2,
                                                                      style=QtCore.Qt.DashLine),
                                                             symbolBrush=(0, 0, 0),
-                                                            symbolSize=5,
+                                                            symbolSize=7,
                                                             symbol='o')
 
 
